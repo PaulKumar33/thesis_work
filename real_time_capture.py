@@ -4,8 +4,11 @@ import struct
 import time
 import statistics
 import csv
-import scipy.stats
+#import scipy.stats
 import pandas as pd
+import os
+
+import mcp_3008_driver as mcp
 
 import matplotlib.pyplot as plt
 from decision_tree import impurity
@@ -13,10 +16,12 @@ from decision_tree import impurity
 class serialCapture:
     def __init__(self, port, baudrate, timeout=4, data_name = None, low_delay=15,
                  peak_method='slope', thresh_holds = [2.25, 2.75]):
+        
+        
 
         self.data_name = data_name
         self.rawData = bytearray(4)
-        self.csvData = [[], []]
+        self.csvData = [[], [], []]
 
         self.filter_length = 21
         self.buffer_length = 16
@@ -28,22 +33,28 @@ class serialCapture:
         self.csv_write = []
 
         try:
-            self.handle = serial.Serial(port, baudrate, timeout=timeout)
-            print("Connected")
+            if(os.name == 'nt'):
+                self.handle = serial.Serial(port, baudrate, timeout=timeout)
+                print("Connected")
 
-            df = pd.read_excel("./decision_data.xlsx", "left_right")
-            # df = df.drop(columns=['figure'])
+                df = pd.read_excel("./decision_data.xlsx", "left_right")
+                # df = df.drop(columns=['figure'])
 
-            df_mat = df.values.tolist()
-            self.tree = impurity.build_tree(df_mat)
-
-            impurity.print_tree(self.tree)
+                df_mat = df.values.tolist()
+                """self.tree = impurity.build_tree(df_mat)
+                impurity.print_tree(self.tree)"""
+            elif(os.name == 'posix'):
+                print("connecting to ADC")
+                self.mcp = mcp.mcp_external()
+            
         except Exception as e:
             print(e)
 
     def printCollectedData(self, save_data, save_plot, sample_points = 400):
         print('sleeping for test')
         time.sleep(5)
+        if(os.name == "nt"):
+            self.handle.reset_input_buffer()
 
         upper = self.thresh_holds[1]
         lower = self.thresh_holds[0]
@@ -51,7 +62,7 @@ class serialCapture:
         var_limit = 0.0100
 
         tik = time.time()
-        self.handle.reset_input_buffer()
+        
         avg_buffer = []
         data_buffer = []
         trig_tracker = []
@@ -99,20 +110,38 @@ class serialCapture:
         counter = 5
         print("start")
         while(True):
-            self.handle.readinto(self.rawData)
+            time.sleep(0.05)
+            if(os.name == "nt"):
+                self.handle.readinto(self.rawData)
+            else:
+                #print("{}".format(self.mcp.read_IO(0)/65355*5.2))
+                self.csvData[1].append(float(self.mcp.read_IO(0)/65355*5.2))
+                self.csvData[2].append(float(self.mcp.read_IO(1)/65355*5.2))
             #print(self.rawData)
 
             #implement the moving average filter
             if(len(avg_buffer) < self.filter_length):
                 t=time.time() - tik
                 self.csvData[0].append(t)
-                self.csvData[1].append(struct.unpack('f', self.rawData)[0])
+                if(os.name == 'nt'):
+                    self.csvData[1].append(struct.unpack('f', self.rawData)[0])
+                elif(os.name == 'posix'):
+                    self.csvData[1].append(float(self.mcp.read_IO(0)/65355*5.2))
+                    self.csvData[2].append(float(self.mcp.read_IO(1)/65355*5.2))
             else:
                 self.csvData[0].append(time.time() - tik)
-                data = struct.unpack('f', self.rawData)[0]/self.filter_length
+                if(os.name == 'nt'):
+                    data = struct.unpack('f', self.rawData)[0]/self.filter_length
+                elif(os.name == 'posix'):
+                    data = float(self.mcp.read_IO(0)/65355*5.2)
+                    data1 = float(self.mcp.read_IO(1)/65355*5.2)
+                    #print("DATA: {}".format(data/65355*5.2))
+                #data = struct.unpack('f', self.rawData)[0]/self.filter_length
                 for i in range(self.filter_length-1):
                     data += self.csvData[1][-(i+1)]
+                    data1 += self.csvData[2][-(i+1)]
                 self.csvData[1].append(data)
+                self.csvData[2].append(data1)
 
 
             if(len(data_buffer) < self.buffer_length):
@@ -167,17 +196,17 @@ class serialCapture:
                                 s_index = self.csvData[0].index(start_index)
                                 e_index = self.csvData[0].index(stop_index)
 
-                                var_mean = statistics.mean(self.csvData[1])
+                                _mean = statistics.mean(self.csvData[1])
                                 variance = statistics.variance(self.csvData[1])
                                 skewness = scipy.stats.skew(self.csvData[1])
 
                                 print("Getting features")
-                                print(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, var_mean, variance)
+                                print(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, _mean, variance)
                                 #self.csv_write.append(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, start_time, end_time, time_period)
                                 tracked_signal_marks.append(temp)
-                                self.csv_write.append([first_peak, last_peak, gradient, _max_peak, _min_peak, var_mean, variance, skewness])
+                                self.csv_write.append([first_peak, last_peak, gradient, _max_peak, _min_peak, _mean, variance, skewness])
 
-                                _classify = impurity.classify(
+                                '''_classify = impurity.classify(
                                     [first_peak, last_peak, gradient, variance], self.tree)
 
                                 max_guess = 0
@@ -185,97 +214,8 @@ class serialCapture:
                                 for _class_ in _classify:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
-                                print(f"Predicted: {max_class}")
-                                '''if(gradient >= 0.085634235):
-                                    if(var_mean >= 2.47233628887347):
-                                        if(variance >= 1.086853813):
-                                            decisions.append('no-cross-left')
-                                        else:
-                                            if(first_peak >= 2.182617188):
-                                                decisions.append('no-cross-left')
-                                            else:
-                                                decisions.append('right')
-                                    else:
-                                        if(last_peak >= 2.817382813):
-                                            if(last_peak >= 2.822265625):
-                                                decisions.append('no-cross-right')
-                                            else:
-                                                decisions.append('left')
-                                        else:
-                                            decisions.append('no-cross-left')
-
-                                else:
-                                    if(last_peak >= 2.802734375):
-                                        if(var_mean >= 2.472737964):
-                                            if(first_peak >= 2.895507813):
-                                                if(first_peak >= 2.9296875):
-                                                    decisions.append('no-cross-left')
-                                                else:
-                                                    decisions.append('left')
-                                            else:
-                                                if(var_mean >= 2.473408683):
-                                                    decisions.append('right')
-                                                else:
-                                                    if(first_peak >= 2.8515625):
-                                                        decisions.append('no-cross-right')
-                                                    else:
-                                                        decisions.append('right')
-
-                                        else:
-                                            if(last_peak >= 2.861328125):
-                                                decisions.append('right')
-                                            else:
-                                                if(var_mean >= 2.472353451):
-                                                    if(first_peak >= 2.861328125):
-                                                        decisions.append('right')
-                                                    else:
-                                                        decisions.append('no-cross-right')
-                                                else:
-                                                    decisions.append('no-cross-right')
-                                    else:
-                                        if(var_mean >= 2.476591222):
-                                            decisions.append('left')
-
-                                        else:
-                                            if(gradient >= 0.0):
-                                                if(first_peak >= 2.114257813):
-                                                    if(variance >= 1.288700626):
-                                                        if(var_mean >= 2.472983205):
-                                                            decisions.append('left')
-                                                        else:
-                                                            if(last_peak >= 2.192382813):
-                                                                decisions.append('left')
-                                                            else:
-                                                                if(first_peak >= 2.172851563):
-                                                                    decisions.append('no-cross-right')
-                                                                else:
-                                                                    decisions.append('right')
-                                                    else:
-                                                        decisions.append('left')
-                                                else:
-                                                    decisions.append('no-cross-right')
-                                            else:
-                                                if(first_peak >= 2.866210938):
-                                                    if(last_peak >= 2.197265625):
-                                                        decisions.append('no-cross-right')
-                                                    else:
-                                                        decisions.append('left')
-                                                else:
-                                                    if(gradient >= -0.218884082):
-                                                        if(var_mean >= 2.475854022):
-                                                            if(last_peak):
-                                                                decisions.append('left')
-                                                            else:
-                                                                decisions.append('no-cross-right')
-                                                        else:
-                                                            decisions.append('no-cross-right')
-                                                    else:
-                                                        decisions.append('right')'''
-
-
-
-
-
+                                print(f"Predicted: {max_class}")'''
+                                
                         start_index, stop_index, first_peak, last_peak, start_time, end_time, _max_peak, _min_peak = None, None, None, None, None, None, 2.5, 2.5
 
 
@@ -584,4 +524,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=6000)
+    handle.printCollectedData(None, None, sample_points=50)
