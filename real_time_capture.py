@@ -37,7 +37,7 @@ class serialCapture:
                 self.handle = serial.Serial(port, baudrate, timeout=timeout)
                 print("Connected")
 
-                df = pd.read_excel("./decision_data.xlsx", "left_right")
+                df = pd.read_excel("./decision_data.xlsx", "data_no_higher_order")
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
@@ -47,12 +47,13 @@ class serialCapture:
             elif(os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data.xlsx", "left_right")
+                df = pd.read_excel("./decision_data.xlsx", "all_features-double_node")
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
                 self.tree = impurity.build_tree(df_mat)
                 impurity.print_tree(self.tree)
+                print("starting capture")
             
         except Exception as e:
             print(e)
