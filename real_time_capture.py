@@ -191,7 +191,7 @@ class serialCapture:
 
                                 temp = [0,0,0]
                                 gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
-                                gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index - start_index)
+                                gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index_2 - start_index_2)
 
                                 temp[0] = 1 if first_peak >= 2.5 else 0
                                 temp[1] = 1 if last_peak >= 2.5 else 0
@@ -737,4 +737,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=500)
+    handle.printCollectedData(None, None, sample_points=6000)
