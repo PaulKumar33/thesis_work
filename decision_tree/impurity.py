@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-df = pd.read_excel("../decision_data.xlsx", "all_features-double_node")
+df = pd.read_excel("../decision_data.xlsx", "data_no_higher_order")
 #df = df.drop(columns=['figure'])
 
 df_mat = df.values.tolist()
