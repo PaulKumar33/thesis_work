@@ -119,10 +119,10 @@ class serialCapture:
             time.sleep(0.05)
             if(os.name == "nt"):
                 self.handle.readinto(self.rawData)
-            else:
+            #else:
                 #print("{}".format(self.mcp.read_IO(0)/65355*5.2))
-                self.csvData[1].append(float(self.mcp.read_IO(0)/65355*5.2))
-                self.csvData[2].append(float(self.mcp.read_IO(1)/65355*5.2))
+                #self.csvData[1].append(float(self.mcp.read_IO(0)/65355*5.2))
+                #self.csvData[2].append(float(self.mcp.read_IO(1)/65355*5.2))
             #print(self.rawData)
 
             #implement the moving average filter
@@ -132,15 +132,15 @@ class serialCapture:
                 if(os.name == 'nt'):
                     self.csvData[1].append(struct.unpack('f', self.rawData)[0])
                 elif(os.name == 'posix'):
-                    self.csvData[1].append(float(self.mcp.read_IO(0)/65355*5.2))
-                    self.csvData[2].append(float(self.mcp.read_IO(1)/65355*5.2))
+                    self.csvData[1].append(float(self.mcp.read_IO(0)/65355*5))
+                    self.csvData[2].append(float(self.mcp.read_IO(1)/65355*5))
             else:
                 self.csvData[0].append(time.time() - tik)
                 if(os.name == 'nt'):
                     data = struct.unpack('f', self.rawData)[0]/self.filter_length
                 elif(os.name == 'posix'):
-                    data = float(self.mcp.read_IO(0)/65355*5.2)
-                    data1 = float(self.mcp.read_IO(1)/65355*5.2)
+                    data = float(self.mcp.read_IO(0)/65355*5)
+                    data1 = float(self.mcp.read_IO(1)/65355*5)
                     #print("DATA: {}".format(data/65355*5.2))
                 #data = struct.unpack('f', self.rawData)[0]/self.filter_length
                 for i in range(self.filter_length-1):
@@ -189,12 +189,13 @@ class serialCapture:
 
                                 temp = [0,0,0]
                                 gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
+                                gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index - start_index)
 
                                 temp[0] = 1 if first_peak >= 2.5 else 0
                                 temp[1] = 1 if last_peak >= 2.5 else 0
                                 temp[2] = 1 if gradient >= 0 else 0
 
-                                time_period = end_time - start_time
+                                #time_period = end_time - start_time
                                 """s_index = between_peak_time.index(start_time)
                                 e_index = between_peak_time.index(end_time)
                                 mean_pk2pk = statistics.mean(between_peak_time[s_index:e_index+1])"""
@@ -205,12 +206,15 @@ class serialCapture:
                                 _mean = statistics.mean(self.csvData[1])
                                 variance = statistics.variance(self.csvData[1])
                                 skewness = scipy.stats.skew(self.csvData[1])
+                                
+                                variance_2 = statistics.variance(self.csvData[2])
+                                skewness_2 = scipy.stats.skew(self.csvData[2])
 
                                 print("Getting features")
                                 print(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, _mean, variance)
                                 #self.csv_write.append(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, start_time, end_time, time_period)
                                 tracked_signal_marks.append(temp)
-                                self.csv_write.append([first_peak, last_peak, gradient, _max_peak, _min_peak, _mean, variance, skewness])
+                                self.csv_write.append([first_peak, last_peak, gradient, first_peak_2, last_peak_2, gradient_2, _mean, variance, skewness, variance_2, skewness_2])
 
                                 '''_classify = impurity.classify(
                                     [first_peak, last_peak, gradient, variance], self.tree)
@@ -222,7 +226,7 @@ class serialCapture:
                                         max_class, max_guess = _class_, _classify[_class_]
                                 print(f"Predicted: {max_class}")'''
                                 
-                        start_index, stop_index, first_peak, last_peak, start_time, end_time, _max_peak, _min_peak = None, None, None, None, None, None, 2.5, 2.5
+                        start_index, stop_index, first_peak, last_peak, end_time, _max_peak, _min_peak = None, None, None, None, None, 2.5, 2.5
 
 
                     else:
@@ -487,24 +491,19 @@ class serialCapture:
                                     prev_peak = 1
                                 elif (self.csvData[2][-1] < self.csvData[2][-2] and self.csvData[2][-3] <= self.csvData[2][
                                     -2]):
-                                    max_points_2.append(self.csvData[1][-2])
+                                    max_points_2.append(self.csvData[2][-2])
                                     max_time_2.append(self.csvData[0][-2])
-                                    '''if (len(between_peak_time) == 0):
-                                        between_peak_time.append(self.csvData[0][-2])
-                                    elif (prev_peak != 1):
-                                        between_peak_time.append(self.csvData[0][-2] - between_peak_time[-1])
-                                    if (self.csvData[1][-2] > _max_peak):
-                                        _max_peak = self.csvData[1][-2]'''
+                                    
                                     prev_peak = 1
 
 
                                 if(first_peak_2 == None):
-                                    first_peak_2 = self.csvData[1][-2]
+                                    first_peak_2 = self.csvData[2][-2]
                                     if (start_index == None):
                                         start_index = t
 
 
-                                last_peak = self.csvData[1][-2]
+                                last_peak_2 = self.csvData[2][-2]
                                 stop_index = t
                                 end_time = self.csvData[0][-2]
 
@@ -552,7 +551,7 @@ class serialCapture:
 
                         if (os.name == "posix"):
                             #min peaks 2
-                            if (self.csvData[2][-2] <= lower):
+                            if (self.csvData[2][-2] <= 1.8):
                                 if (self.csvData[2][-1] > self.csvData[2][-2] and self.csvData[2][-3] > self.csvData[2][
                                     -2]):
                                     min_points_2.append(self.csvData[2][-2])
@@ -588,11 +587,11 @@ class serialCapture:
                                     prev_peak = 0
 
                                 if (first_peak_2 == None):
-                                    first_peak_2 = self.csvData[1][-2]
+                                    first_peak_2 = self.csvData[2][-2]
                                     if (start_index == None):
                                         start_index = t
 
-                                last_peak = self.csvData[1][-2]
+                                last_peak_2 = self.csvData[2][-2]
                                 stop_index = t
                                 end_time = self.csvData[0][-2]
 
@@ -621,7 +620,8 @@ class serialCapture:
         fig, axs = plt.subplots(4)
 
         fig.suptitle("Recorded data")
-        print(len(trig_tracker), len(trig_time))
+        #print(len(trig_tracker), len(trig_time))
+        print(len(self.csvData[0]), len(self.csvData[1]))
         axs[0].scatter(self.csvData[0], self.csvData[1])
         if(self.peak_method == 'slope'):
             axs[0].scatter(slope_time, slope_pts)
@@ -634,8 +634,10 @@ class serialCapture:
         axs[0].set_xlabel("time [s]")
         axs[0].set_ylabel("Voltage [V]")
         plt.grid(True)
-        axs[1].scatter(total_slope_time, total_slope)
-        axs[1].axhline(y=0, c='red')
+        axs[1].scatter(self.csvData[0], self.csvData[2])
+        axs[1].scatter(max_time_2, max_points_2)
+        axs[1].scatter(min_time_2, min_points_2)
+        #axs[1].axhline(y=0, c='red')
         axs[1].set_xlim(self.csvData[0][0],self.csvData[0][-1])
         axs[1].set_xlabel("time [s]")
         axs[1].set_ylabel("dV/dt [V]")
@@ -673,4 +675,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=50)
+    handle.printCollectedData(None, None, sample_points=500)
