@@ -47,7 +47,7 @@ class serialCapture:
             elif(os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data.xlsx", "all_features-double_node")
+                df = pd.read_excel("./decision_data.xlsx", "increased_gain")
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
@@ -226,17 +226,18 @@ class serialCapture:
                                 print(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, _mean, variance)
                                 #self.csv_write.append(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, start_time, end_time, time_period)
                                 tracked_signal_marks.append(temp)
-                                self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2])
+                                #self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2])
 
-                                """_classify = impurity.classify(
-                                    [first_peak, last_peak, gradient, first_peak_2, last_peak_2, gradient_2, _mean, variance, skewness, variance_2, skewness_2], self.tree)
+                                _classify = impurity.classify(
+                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, variance, skewness, variance_2, skewness_2], self.tree)
 
                                 max_guess = 0
                                 max_class = None
                                 for _class_ in _classify:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
-                                print("Predicted: {}".format(max_class))"""
+                                print("Predicted: {}".format(max_class))
+                                self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2, max_class])
                                 
                         start_index, stop_index, first_peak, last_peak, end_time, _max_peak, _min_peak = None, None, None, None, None, 2.5, 2.5
 
