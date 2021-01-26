@@ -197,13 +197,15 @@ class serialCapture:
                                 '''peaks - 0, below 2.5. 1, above 2.5'''
                                 '''gradient - 0, negative'''
 
-                                temp = [0,0,0]
+                                temp = [0,0,0,0]
                                 gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
                                 gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index_2 - start_index_2)
 
                                 temp[0] = 1 if first_peak >= 2.5 else 0
                                 temp[1] = 1 if last_peak >= 2.5 else 0
-                                temp[2] = 1 if gradient >= 0 else 0
+                                #temp[2] = 1 if gradient >= 0 else 0
+                                temp[2] = 1 if first_peak_2 >= 2.5 else 0
+                                temp[3] = 1 if last_peak_2 >= 2.5 else 0
 
                                 #time_period = end_time - start_time
                                 """s_index = between_peak_time.index(start_time)
@@ -224,7 +226,7 @@ class serialCapture:
                                 print(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, _mean, variance)
                                 #self.csv_write.append(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, start_time, end_time, time_period)
                                 tracked_signal_marks.append(temp)
-                                self.csv_write.append([first_peak, last_peak, gradient, first_peak_2, last_peak_2, gradient_2, _mean, variance, skewness, variance_2, skewness_2])
+                                self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2])
 
                                 """_classify = impurity.classify(
                                     [first_peak, last_peak, gradient, first_peak_2, last_peak_2, gradient_2, _mean, variance, skewness, variance_2, skewness_2], self.tree)
@@ -745,4 +747,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=10000)
+    handle.printCollectedData(None, None, sample_points=6000)
