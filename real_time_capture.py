@@ -199,7 +199,7 @@ class serialCapture:
                                 '''peaks - 0, below 2.5. 1, above 2.5'''
                                 '''gradient - 0, negative'''
 
-                                temp = [0,0,0,0]
+                                temp = [0, 0, 0, 0, 0, 0]
                                 gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
                                 gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index_2 - start_index_2)
 
@@ -208,6 +208,8 @@ class serialCapture:
                                 #temp[2] = 1 if gradient >= 0 else 0
                                 temp[2] = 1 if first_peak_2 >= 2.5 else 0
                                 temp[3] = 1 if last_peak_2 >= 2.5 else 0
+                                temp[4] = 1 if second_peak >= 2.5 else 0
+                                temp[5] = 1 if second_peak_2 >= 2.5 else 0
 
                                 #time_period = end_time - start_time
                                 """s_index = between_peak_time.index(start_time)
@@ -230,16 +232,16 @@ class serialCapture:
                                 tracked_signal_marks.append(temp)
                                 #self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2])
 
-                                _classify = impurity.classify(
-                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, variance, skewness, variance_2, skewness_2], self.tree)
+                                '''_classify = impurity.classify(
+                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, second_peak, second_peak_2, variance, skewness, variance_2, skewness_2], self.tree)
 
                                 max_guess = 0
                                 max_class = None
                                 for _class_ in _classify:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
-                                print("Predicted: {}".format(max_class))
-                                self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2, max_class])
+                                print("Predicted: {}".format(max_class))'''
+                                self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2])
                                 
                         start_index, stop_index, first_peak, first_peak_2, second_peak, second_peak_2, last_peak, last_peak_2, end_time, _max_peak, _min_peak = \
                             None, None, None, None, None, None, None, None, None, 2.5, 2.5
@@ -741,4 +743,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=10000)
+    handle.printCollectedData(None, None, sample_points=5000)
