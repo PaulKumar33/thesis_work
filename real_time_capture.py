@@ -67,7 +67,7 @@ class serialCapture:
         upper = self.thresh_holds[1]
         lower = self.thresh_holds[0]
 
-        var_limit = 0.00850
+        var_limit = 0.00750
 
         tik = time.time()
         
@@ -673,7 +673,7 @@ class serialCapture:
 
                         if (os.name == "posix"):
                             #min peaks 2
-                            if (self.csvData[2][-2] <= 1.8):
+                            if (self.csvData[2][-2] <= lower):
                                 if (self.csvData[2][-1] > self.csvData[2][-2] and self.csvData[2][-3] > self.csvData[2][
                                     -2]):
                                     min_points_2.append(self.csvData[2][-2])
@@ -801,4 +801,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=3000)
+    handle.printCollectedData(None, None, sample_points=10000)
