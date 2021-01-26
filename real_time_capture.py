@@ -47,7 +47,7 @@ class serialCapture:
             elif(os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data.xlsx", "increased_gain")
+                df = pd.read_excel("./decision_data.xlsx", "schema_2")
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
@@ -67,7 +67,7 @@ class serialCapture:
         upper = self.thresh_holds[1]
         lower = self.thresh_holds[0]
 
-        var_limit = 0.0100
+        var_limit = 0.00850
 
         tik = time.time()
         
@@ -200,8 +200,66 @@ class serialCapture:
                                 '''gradient - 0, negative'''
 
                                 temp = [0, 0, 0, 0, 0, 0]
-                                gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
-                                gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index_2 - start_index_2)
+                                try:
+                                    gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
+                                    gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index_2 - start_index_2)
+                                except TypeError:
+                                    fig, axs = plt.subplots(1)
+
+                                    fig.suptitle("Recorded data")
+                                    print(len(self.csvData[0]), len(self.csvData[1]))
+                                    axs.scatter(self.csvData[0], self.csvData[1])
+                                    if(self.peak_method == 'slope'):
+                                        axs.scatter(slope_time, slope_pts)
+                                    elif(self.peak_method == 'peak_detection'):
+                                        axs.scatter(max_time, max_points)
+                                        axs.scatter(min_time, min_points)
+                                    axs.axhline(y=lower, c='red')
+                                    axs.axhline(y=upper, c='red')
+                                    axs.set_xlim(self.csvData[0][0], self.csvData[0][-1])
+                                    axs.set_xlabel("time [s]")
+                                    axs.set_ylabel("Voltage [V]")
+                                    
+                                    return
+                                except ZeroDivisionError:
+                                    fig, axs = plt.subplots(1)
+
+                                    fig.suptitle("Recorded data")
+                                    print(len(self.csvData[0]), len(self.csvData[1]))
+                                    print(len(self.csvData[0]), len(self.csvData[1]))
+                                    axs.scatter(self.csvData[0], self.csvData[1])
+                                    if(self.peak_method == 'slope'):
+                                        axs.scatter(slope_time, slope_pts)
+                                    elif(self.peak_method == 'peak_detection'):
+                                        axs.scatter(max_time, max_points)
+                                        axs.scatter(min_time, min_points)
+                                    axs.axhline(y=lower, c='red')
+                                    axs.axhline(y=upper, c='red')
+                                    axs.set_xlim(self.csvData[0][0], self.csvData[0][-1])
+                                    axs.set_xlabel("time [s]")
+                                    axs.set_ylabel("Voltage [V]")
+                                    
+                                    return
+                                except Exception:
+                                    fig, axs = plt.subplots(1)
+
+                                    fig.suptitle("Recorded data")
+                                    print(len(self.csvData[0]), len(self.csvData[1]))
+                                    print(len(self.csvData[0]), len(self.csvData[1]))
+                                    axs.scatter(self.csvData[0], self.csvData[1])
+                                    if(self.peak_method == 'slope'):
+                                        axs.scatter(slope_time, slope_pts)
+                                    elif(self.peak_method == 'peak_detection'):
+                                        axs.scatter(max_time, max_points)
+                                        axs.scatter(min_time, min_points)
+                                    axs.axhline(y=lower, c='red')
+                                    axs.axhline(y=upper, c='red')
+                                    axs.set_xlim(self.csvData[0][0], self.csvData[0][-1])
+                                    axs.set_xlabel("time [s]")
+                                    axs.set_ylabel("Voltage [V]")
+                                    
+                                    return
+                                
 
                                 temp[0] = 1 if first_peak >= 2.5 else 0
                                 temp[1] = 1 if last_peak >= 2.5 else 0
@@ -232,15 +290,15 @@ class serialCapture:
                                 tracked_signal_marks.append(temp)
                                 #self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2])
 
-                                '''_classify = impurity.classify(
-                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, second_peak, second_peak_2, variance, skewness, variance_2, skewness_2], self.tree)
+                                _classify = impurity.classify(
+                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2], self.tree)
 
                                 max_guess = 0
                                 max_class = None
                                 for _class_ in _classify:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
-                                print("Predicted: {}".format(max_class))'''
+                                print("Predicted: {}".format(max_class))
                                 self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2])
                                 
                         start_index, stop_index, first_peak, first_peak_2, second_peak, second_peak_2, last_peak, last_peak_2, end_time, _max_peak, _min_peak = \
@@ -743,4 +801,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=5000)
+    handle.printCollectedData(None, None, sample_points=3000)
