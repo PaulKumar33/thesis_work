@@ -292,9 +292,12 @@ class serialCapture:
                                 tracked_signal_marks.append(temp)
                                 #self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2])
 
+                                #_classify = impurity.classify(
+                                #    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2], self.tree)
+                                '''_classify = impurity.classify(
+                                    [first_peak, last_peak, first_peak_2, last_peak_2, second_peak, second_peak_2, gradient, gradient_2], self.tree)'''
                                 _classify = impurity.classify(
-                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2], self.tree)
-
+                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5]], self.tree)
                                 max_guess = 0
                                 max_class = None
                                 for _class_ in _classify:
@@ -803,4 +806,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=12000)
+    handle.printCollectedData(None, None, sample_points=5000)
