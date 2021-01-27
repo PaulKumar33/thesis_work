@@ -205,7 +205,7 @@ class serialCapture:
                                 try:
                                     '''gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
                                     gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index_2 - start_index_2)'''
-
+                                    print("Here are the peaks: {0}, {1}, {2}, {3}".format(first_peak, second_peak, second_last_peak, last_peak))
                                     gradient = ((last_peak + second_last_peak)/2 - (first_peak+second_peak)/2)/(stop_index - start_index)
                                     gradient_2 = ((last_peak_2 + second_last_peak_2)/2 - (first_peak_2+second_last_peak_2)/2)/(stop_index_2 - start_index_2)
                                 except TypeError:
@@ -873,4 +873,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=1000)
+    handle.printCollectedData(None, None, sample_points=300)
