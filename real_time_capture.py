@@ -201,13 +201,15 @@ class serialCapture:
                                 '''peaks - 0, below 2.5. 1, above 2.5'''
                                 '''gradient - 0, negative'''
 
-                                temp = [0, 0, 0, 0, 0, 0]
+                                temp = [0, 0, 0, 0, 0, 0, 0, 0]
                                 try:
                                     '''gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
                                     gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index_2 - start_index_2)'''
                                     print("Here are the peaks: {0}, {1}, {2}, {3}".format(first_peak, second_peak, second_last_peak, last_peak))
+                                    print("Here are the peaks: {0}, {1}, {2}, {3}".format(first_peak_2, second_peak_2, second_last_peak_2, last_peak_2))
                                     gradient = ((last_peak + second_last_peak)/2 - (first_peak+second_peak)/2)/(stop_index - start_index)
-                                    gradient_2 = ((last_peak_2 + second_last_peak_2)/2 - (first_peak_2+second_last_peak_2)/2)/(stop_index_2 - start_index_2)
+                                    gradient_2 = ((last_peak_2 + second_last_peak_2)/2 - (first_peak_2+second_peak_2)/2)/(stop_index_2 - start_index_2)
+                                    print("here me gradients: {0}, {1}".format(gradient, gradient_2))
                                 except TypeError:
                                     fig, axs = plt.subplots(1)
 
@@ -273,6 +275,8 @@ class serialCapture:
                                 temp[3] = 1 if last_peak_2 >= 2.5 else 0
                                 temp[4] = 1 if second_peak >= 2.5 else 0
                                 temp[5] = 1 if second_peak_2 >= 2.5 else 0
+                                temp[6] = 1 if second_last_peak >= 2.5 else 0
+                                temp[7] = 1 if second_last_peak_2 >= 2.5 else 0
 
                                 #time_period = end_time - start_time
                                 """s_index = between_peak_time.index(start_time)
@@ -309,7 +313,7 @@ class serialCapture:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
                                 print("Predicted: {}".format(max_class))
-                                self.csv_write.append([first_peak, last_peak, first_peak_2, last_peak_2, second_peak, second_peak_2, temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2, max_class])
+                                self.csv_write.append([first_peak, second_peak, second_last_peak, last_peak, first_peak_2, second_peak_2, second_last_peak_2, last_peak_2, second_peak, temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7]])
                                 
                         start_index, stop_index, first_peak, first_peak_2, second_peak, second_peak_2, last_peak, last_peak_2, end_time, _max_peak, _min_peak = \
                             None, None, None, None, None, None, None, None, None, 2.5, 2.5
@@ -499,7 +503,7 @@ class serialCapture:
                                 start_index = t
                                 start_time = self.csvData[0][-2]
 
-                            if(last_peak != None and second_last_peak == None):
+                            if(last_peak != None and second_last_peak == None and last_peak/self.csvData[1][-2] < 0):
                                 second_last_peak = last_peak
                             elif(second_last_peak!=None):
                                 second_last_peak = last_peak
@@ -516,13 +520,13 @@ class serialCapture:
                             if(self.csvData[1][-1] < self.csvData[1][-2] and self.csvData[1][-3] < self.csvData[1][-2]):
                                 max_points.append(self.csvData[1][-2])
                                 max_time.append(self.csvData[0][-2])
-                                if(first_peak != None and second_peak != None and first_peak/self.csvData[1][-2]):
+                                if(first_peak != None and second_peak == None and (first_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_peak = self.csvData[1][-2]
                                 if (first_peak == None):
                                     first_peak = self.csvData[1][-2]
                                     start_index = t
 
-                                if (last_peak != None):
+                                if (last_peak != None and (last_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_last_peak = last_peak
 
                                 last_peak = self.csvData[1][-2]
@@ -537,13 +541,13 @@ class serialCapture:
                             elif(self.csvData[1][-1] <= self.csvData[1][-2] and self.csvData[1][-3] < self.csvData[1][-2]):
                                 max_points.append(self.csvData[1][-2])
                                 max_time.append(self.csvData[0][-2])
-                                if (first_peak != None and second_peak != None and first_peak/self.csvData[1][-2]):
+                                if (first_peak != None and second_peak == None and (first_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_peak = self.csvData[1][-2]
                                 if (first_peak == None):
                                     first_peak = self.csvData[1][-2]
                                     start_index = t
 
-                                if (last_peak != None):
+                                if (last_peak != None and (last_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_last_peak = last_peak
 
                                 last_peak = self.csvData[1][-2]
@@ -558,13 +562,13 @@ class serialCapture:
                             elif (self.csvData[1][-1] < self.csvData[1][-2] and self.csvData[1][-3] <= self.csvData[1][-2]):
                                 max_points.append(self.csvData[1][-2])
                                 max_time.append(self.csvData[0][-2])
-                                if (first_peak != None and second_peak != None and first_peak/self.csvData[1][-2]):
+                                if (first_peak != None and second_peak == None and (first_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_peak = self.csvData[1][-2]
                                 if (first_peak == None):
                                     first_peak = self.csvData[1][-2]
                                     start_index = t
 
-                                if (last_peak != None):
+                                if (last_peak != None and (last_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_last_peak = last_peak
 
                                 last_peak = self.csvData[1][-2]
@@ -586,14 +590,13 @@ class serialCapture:
                                     -2]):
                                     max_points_2.append(self.csvData[2][-2])
                                     max_time_2.append(self.csvData[0][-2])
-                                    if (first_peak_2 != None):
+                                    if (first_peak_2 != None and second_peak_2 == None and (first_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_peak_2 = self.csvData[2][-2]
                                     if (first_peak_2 == None):
                                         first_peak_2 = self.csvData[2][-2]
                                         start_index_2 = t
-                                        start_time = self.csvData[0][-2]
 
-                                    if (last_peak_2 != None):
+                                    if (last_peak_2 != None and (last_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_last_peak_2 = last_peak_2
 
                                     last_peak_2 = self.csvData[2][-2]
@@ -603,14 +606,13 @@ class serialCapture:
                                     -2]):
                                     max_points_2.append(self.csvData[2][-2])
                                     max_time_2.append(self.csvData[0][-2])
-                                    if (first_peak_2 != None):
+                                    if (first_peak_2 != None and second_peak_2 == None and (first_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_peak_2 = self.csvData[2][-2]
                                     if (first_peak_2 == None):
                                         first_peak_2 = self.csvData[2][-2]
                                         start_index_2 = t
-                                        start_time = self.csvData[0][-2]
 
-                                    if (last_peak_2 != None):
+                                    if (last_peak_2 != None and (last_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_last_peak_2 = last_peak_2
 
                                     last_peak_2 = self.csvData[2][-2]
@@ -620,14 +622,13 @@ class serialCapture:
                                     -2]):
                                     max_points_2.append(self.csvData[2][-2])
                                     max_time_2.append(self.csvData[0][-2])
-                                    if (first_peak_2 != None):
+                                    if (first_peak_2 != None and second_peak_2 == None and (first_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_peak_2 = self.csvData[2][-2]
                                     if (first_peak_2 == None):
                                         first_peak_2 = self.csvData[2][-2]
                                         start_index_2 = t
-                                        start_time = self.csvData[0][-2]
 
-                                    if (last_peak_2 != None):
+                                    if (last_peak_2 != None and (last_peak_2-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                         second_last_peak_2 = last_peak_2
 
                                     last_peak_2 = self.csvData[2][-2]
@@ -640,13 +641,13 @@ class serialCapture:
                             if (self.csvData[1][-1] > self.csvData[1][-2] and self.csvData[1][-3] > self.csvData[1][-2]):
                                 min_points.append(self.csvData[1][-2])
                                 min_time.append(self.csvData[0][-2])
-                                if (first_peak != None and second_peak != None and first_peak / self.csvData[1][-2]):
+                                if (first_peak != None and second_peak == None and (first_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_peak = self.csvData[1][-2]
                                 if (first_peak == None):
                                     first_peak = self.csvData[1][-2]
                                     start_index = t
 
-                                if (last_peak != None):
+                                if (last_peak != None and (last_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_last_peak = last_peak
 
                                 last_peak = self.csvData[1][-2]
@@ -662,13 +663,13 @@ class serialCapture:
                             elif (self.csvData[1][-1] >= self.csvData[1][-2] and self.csvData[1][-3] > self.csvData[1][-2]):
                                 min_points.append(self.csvData[1][-2])
                                 min_time.append(self.csvData[0][-2])
-                                if (first_peak != None and second_peak != None and first_peak / self.csvData[1][-2]):
+                                if (first_peak != None and second_peak == None and (first_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_peak = self.csvData[1][-2]
                                 if (first_peak == None):
                                     first_peak = self.csvData[1][-2]
                                     start_index = t
 
-                                if (last_peak != None):
+                                if (last_peak != None and (last_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_last_peak = last_peak
 
                                 last_peak = self.csvData[1][-2]
@@ -684,13 +685,13 @@ class serialCapture:
                             elif (self.csvData[1][-1] > self.csvData[1][-2] and self.csvData[1][-3] >= self.csvData[1][-2]):
                                 min_points.append(self.csvData[1][-2])
                                 min_time.append(self.csvData[0][-2])
-                                if (first_peak != None and second_peak != None and first_peak / self.csvData[1][-2]):
+                                if (first_peak != None and second_peak == None and (first_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_peak = self.csvData[1][-2]
                                 if (first_peak == None):
                                     first_peak = self.csvData[1][-2]
                                     start_index = t
 
-                                if (last_peak != None):
+                                if (last_peak != None and (last_peak-2.5)/(self.csvData[1][-2]-2.5) < 0):
                                     second_last_peak = last_peak
 
                                 last_peak = self.csvData[1][-2]
@@ -711,14 +712,13 @@ class serialCapture:
                                     -2]):
                                     min_points_2.append(self.csvData[2][-2])
                                     min_time_2.append(self.csvData[0][-2])
-                                    if (first_peak_2 != None):
+                                    if (first_peak_2 != None and second_peak_2 == None and (first_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_peak_2 = self.csvData[2][-2]
                                     if (first_peak_2 == None):
                                         first_peak_2 = self.csvData[2][-2]
                                         start_index_2 = t
-                                        start_time = self.csvData[0][-2]
 
-                                    if (last_peak_2 != None):
+                                    if (last_peak_2 != None and (last_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_last_peak_2 = last_peak_2
 
                                     last_peak_2 = self.csvData[2][-2]
@@ -729,14 +729,13 @@ class serialCapture:
                                     -2]):
                                     min_points_2.append(self.csvData[2][-2])
                                     min_time_2.append(self.csvData[0][-2])
-                                    if (first_peak_2 != None):
+                                    if (first_peak_2 != None and second_peak_2 == None and (first_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_peak_2 = self.csvData[2][-2]
                                     if (first_peak_2 == None):
                                         first_peak_2 = self.csvData[2][-2]
                                         start_index_2 = t
-                                        start_time = self.csvData[0][-2]
 
-                                    if (last_peak_2 != None):
+                                    if (last_peak_2 != None and (last_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_last_peak_2 = last_peak_2
 
                                     last_peak_2 = self.csvData[2][-2]
@@ -747,14 +746,13 @@ class serialCapture:
                                     -2]):
                                     min_points_2.append(self.csvData[2][-2])
                                     min_time_2.append(self.csvData[0][-2])
-                                    if (first_peak_2 != None):
+                                    if (first_peak_2 != None and second_peak_2 == None and (first_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_peak_2 = self.csvData[2][-2]
                                     if (first_peak_2 == None):
                                         first_peak_2 = self.csvData[2][-2]
                                         start_index_2 = t
-                                        start_time = self.csvData[0][-2]
 
-                                    if (last_peak_2 != None):
+                                    if (last_peak_2 != None and (last_peak_2-2.5)/(self.csvData[2][-2]-2.5) < 0):
                                         second_last_peak_2 = last_peak_2
 
                                     last_peak_2 = self.csvData[2][-2]
@@ -843,4 +841,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=300)
+    handle.printCollectedData(None, None, sample_points=10000)
