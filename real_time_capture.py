@@ -284,8 +284,10 @@ class serialCapture:
                                 variance_2 = statistics.variance(self.csvData[2])
                                 skewness_2 = scipy.stats.skew(self.csvData[2])
 
-                                print("Getting features")
-                                print(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, _mean, variance)
+                                print("#########################Getting features#######################################")
+                                print("")
+                                print("")
+
                                 #self.csv_write.append(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, start_time, end_time, time_period)
                                 tracked_signal_marks.append(temp)
                                 #self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2])
@@ -299,7 +301,7 @@ class serialCapture:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
                                 print("Predicted: {}".format(max_class))
-                                self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2])
+                                self.csv_write.append([first_peak, last_peak, first_peak_2, last_peak_2, second_peak, second_peak_2, temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2, max_class])
                                 
                         start_index, stop_index, first_peak, first_peak_2, second_peak, second_peak_2, last_peak, last_peak_2, end_time, _max_peak, _min_peak = \
                             None, None, None, None, None, None, None, None, None, 2.5, 2.5
@@ -801,4 +803,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=10000)
+    handle.printCollectedData(None, None, sample_points=12000)
