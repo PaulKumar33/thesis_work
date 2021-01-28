@@ -47,7 +47,7 @@ class serialCapture:
             elif(os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data.xlsx", "schema_2")
+                df = pd.read_excel("./decision_data.xlsx", "scheme_1")
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
@@ -67,7 +67,7 @@ class serialCapture:
         upper = self.thresh_holds[1]
         lower = self.thresh_holds[0]
 
-        var_limit = 0.00750
+        var_limit = 0.00850
 
         tik = time.time()
         
@@ -197,7 +197,7 @@ class serialCapture:
 
 
                         if(stop_index != None and start_index != None and first_peak != None and last_peak != None):
-                            if(stop_index - start_index > 1.25):
+                            if(stop_index - start_index > 1.5):
                                 '''peaks - 0, below 2.5. 1, above 2.5'''
                                 '''gradient - 0, negative'''
 
@@ -306,7 +306,7 @@ class serialCapture:
                                 '''_classify = impurity.classify(
                                     [first_peak, last_peak, first_peak_2, last_peak_2, second_peak, second_peak_2, gradient, gradient_2], self.tree)'''
                                 _classify = impurity.classify(
-                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5]], self.tree)
+                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7]], self.tree)
                                 max_guess = 0
                                 max_class = None
                                 for _class_ in _classify:
@@ -841,4 +841,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=1000)
+    handle.printCollectedData(None, None, sample_points=4000)
