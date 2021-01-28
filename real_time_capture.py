@@ -841,4 +841,4 @@ if __name__ == "__main__":
     csv_name = f"data_capture_{date}"
 
     handle = serialCapture(port, baudrate, timeout=4, data_name=csv_name, peak_method='peak_detection', thresh_holds=[2.20, 2.80])
-    handle.printCollectedData(None, None, sample_points=10000)
+    handle.printCollectedData(None, None, sample_points=1000)
