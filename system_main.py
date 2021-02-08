@@ -89,7 +89,7 @@ class system_main:
         avg_buffer = []
         data_buffer = []
         trig_tracker = []
-        self.trig_time = []
+        trig_time = []
         self.slope_pts = []
         self.slope_time = []
 
@@ -297,12 +297,14 @@ class system_main:
                                 None, None, None, None, None, None, None, None, None, 2.5, 2.5
                             self.second_last_peak, self.second_last_peak_2 = None, None
                         else:
-                            trig_tracker.append(0)
+                            trig_tracker.append(1)
                             if (self.peak_method == 'peak_detection'):
                                 # simple implementation of the peak detection algorithm
 
                                 # find max
                                 self.runPeakDetection(t)
+                    else:
+                        trig_tracker.append(0)
 
                 elif(Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False):
                     #we have detected movement and no HW event yet
@@ -314,7 +316,7 @@ class system_main:
                     if(self.peak_method == "peak_detection"):
                         self.runPeakDetection(t)
 
-                trig_tracker.append(t)
+                trig_time.append(t)
 
             if (len(self.csvData[0]) >= sample_points):
                 tok = time.time()
@@ -356,7 +358,7 @@ class system_main:
         axs[1].set_ylabel("dV/dt [V]")
         plt.grid(True)
 
-        #axs[2].plot(self.trig_time, trig_tracker)
+        axs[2].plot(trig_time, trig_tracker)
         axs[2].set_xlim(self.csvData[0][0], self.csvData[0][-1])
         axs[2].set_xlabel("time [s]")
         axs[2].set_ylabel("Voltage [V]")
