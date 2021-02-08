@@ -185,7 +185,9 @@ class system_main(object):
 
                 variance_pt.append(Sk / self.buffer_length)
                 variance_time_pt.append(t)
-                if (Sk / self.buffer_length < var_limit and self.DATA_STOP == True):
+                if (Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False):
+
+                    #if data stop high, we do not care about the direction classification, we record the HW event
                     counter += 1
                     if (counter >= self.low_delay):
                         _event = False
@@ -280,15 +282,17 @@ class system_main(object):
                                 # simple implementation of the peak detection algorithm
 
                                 # find max
-                                self.runPeakDetection()
-                else:
+                                self.runPeakDetection(t)
+
+                elif(SK/self.buffer_length > self.var_limit and self.DATA_STOP == False):
+                    #we have detected movement and no HW event yet
                     _event = True
                     window.append(t)
                     trig_tracker.append(1)
                     counter = 0
 
                     if(self.peak_method == "peak_detection"):
-                        self.runPeakDetection()
+                        self.runPeakDetection(t)
 
                 trig_tracker.append(t)
 
