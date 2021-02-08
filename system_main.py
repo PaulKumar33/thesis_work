@@ -9,29 +9,44 @@ import pandas as pd
 import os
 
 import mcp_3008_driver as mcp
+import RPi.GPIO as GPIO
 
 import matplotlib.pyplot as plt
 from decision_tree import impurity
 
 
-class system_main(object):
-    def __init(self, low_delay, peak_method="peaks", window_thresholds=[2.25, 2.75],
+def softwareBtnInterrupt(channel):
+        FLAGS["HW_FLAG"] = True
+
+#HW_FLAG = False #this should be set to true during HW event
+FLAGS={
+    "HW_FLAG": False
+    }
+class system_main:   
+    
+    def __init__(self, low_delay, peak_method="peak_detection", window_thresholds=[2.25, 2.75],
                variance_threshold=0.085):
 
         self.filter_length = 21
         self.buffer_length = 16 #length of the variance data buffer
         self.low_delay = low_delay
-        self.thresh_holds = thresh_holds
+        self.thresh_holds = window_thresholds
         self.variance_limit = variance_threshold
 
         self.peak_method = peak_method
 
         self.csv_write = []
-
-        self.HW_FLAG = False #this should be set to true during HW event
+        self.csvData = [[],[],[]]
+        
         self.RECORD_FLAG = False
         self.HW_EVENT = 0
         self.HW_COUNT = 0
+        
+        #setu0p the GPIOs for interrupts
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        
+        GPIO.add_event_detect(24, GPIO.RISING, callback=softwareBtnInterrupt, bouncetime=300)        
 
         try:
             if (os.name == 'nt'):
@@ -58,11 +73,11 @@ class system_main(object):
 
         except Exception as e:
             print(e)
-        pass
 
-    def runCollection(self):
+    def runCollection(self, sample_points=200):
         print('sleeping for test')
-        time.sleep(5)
+        print(FLAGS)
+        time.sleep(1)
 
         self.upper = self.thresh_holds[1]
         self.lower = self.thresh_holds[0]
@@ -124,22 +139,26 @@ class system_main(object):
         counter = 5
         print("start")
         while(True):
+            #for the sample rate
+            time.sleep(0.03)
 
-            if(self.HW_FLAG):
+            if(FLAGS["HW_FLAG"]):
                 #need to check if we recorded the wash
                 #set the flag low after its completed
                 self.HW_COUNT += 1
                 self.HW_EVENT += 1
-                self.HW_FLAG = False
+                FLAGS["HW_FLAG"] = False
 
                 #set the stop collection flag
                 self.DATA_STOP = True
                 self.STOP_TIME = time.time()
+                print("Event recorded")
 
                 #we want to continue onto the next iteration. Also stop tracking for a few seconds and refresh the buffers
                 continue
 
-            if(time.time() - self.STOP_TIME > 3):
+            if(time.time() - self.STOP_TIME > 1 and self.DATA_STOP == True):
+                print("recordin starting again")
                 self.DATA_STOP = False
 
 
@@ -186,6 +205,7 @@ class system_main(object):
                 variance_pt.append(Sk / self.buffer_length)
                 variance_time_pt.append(t)
                 if (Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False):
+                    print("Here")
 
                     #if data stop high, we do not care about the direction classification, we record the HW event
                     counter += 1
@@ -199,8 +219,8 @@ class system_main(object):
                         total_slope_time.append(t)
                         slope_1 = 1
 
-                        if (stop_index != None and start_index != None and first_peak != None and last_peak != None):
-                            if (stop_index - start_index > 1.5):
+                        if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None):
+                            if (self.stop_index - self.start_index > 1.5):
                                 self.HW_EVENT += 1
 
                                 #compute the classification
@@ -277,14 +297,14 @@ class system_main(object):
                                 None, None, None, None, None, None, None, None, None, 2.5, 2.5
                             self.second_last_peak, self.second_last_peak_2 = None, None
                         else:
-                            trig_tracker.append(1)
+                            trig_tracker.append(0)
                             if (self.peak_method == 'peak_detection'):
                                 # simple implementation of the peak detection algorithm
 
                                 # find max
                                 self.runPeakDetection(t)
 
-                elif(SK/self.buffer_length > self.var_limit and self.DATA_STOP == False):
+                elif(Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False):
                     #we have detected movement and no HW event yet
                     _event = True
                     window.append(t)
@@ -303,7 +323,6 @@ class system_main(object):
         print(f"elapsed time {tok - tik}")
         print(f"sample rate: {len(self.csvData[1]) / (tok - tik)}")
 
-        print(f"inpeak time: {self.between_peak_time}")
         print(f"max peaks: {self.max_points}")
         print(f"min peaks: {self.min_points}")
 
@@ -337,13 +356,13 @@ class system_main(object):
         axs[1].set_ylabel("dV/dt [V]")
         plt.grid(True)
 
-        axs[2].plot(self.trig_time, trig_tracker)
+        #axs[2].plot(self.trig_time, trig_tracker)
         axs[2].set_xlim(self.csvData[0][0], self.csvData[0][-1])
         axs[2].set_xlabel("time [s]")
         axs[2].set_ylabel("Voltage [V]")
         plt.grid(True)
 
-        axs[3].scatter(self.variance_time_pt, self.variance_pt)
+        axs[3].scatter(variance_time_pt, variance_pt)
         axs[3].set_xlim(self.csvData[0][0], self.csvData[0][-1])
         axs[3].set_xlabel("time [s]")
         axs[3].set_ylabel("Voltage [V]")
@@ -523,7 +542,7 @@ class system_main(object):
 
         if (os.name == "posix"):
             # min peaks 2
-            if (self.csvData[2][-2] <= lower):
+            if (self.csvData[2][-2] <= self.lower):
                 if (self.csvData[2][-1] > self.csvData[2][-2] and self.csvData[2][-3] > self.csvData[2][
                     -2]):
                     self.min_points_2.append(self.csvData[2][-2])
@@ -583,3 +602,23 @@ class system_main(object):
         self.start_index, self.stop_index, self.first_peak, self.first_peak_2, self.second_peak, self.second_peak_2, self.last_peak, self.last_peak_2, self.end_time, self._max_peak, self._min_peak = \
             None, None, None, None, None, None, None, None, None, 2.5, 2.5
         self.second_last_peak, self.second_last_peak_2 = None, None
+    
+    def softwareBtnInterrupt(self, channel):
+        self.HW_FLAG = True
+        print("flag set")
+    
+    def testBtnInterrupt(self):
+        print("starting test")
+        tik = time.time()
+        while(True):
+            if(time.time() - tik > 10):
+                print("test done")
+                return
+
+if __name__=="__main__":
+    HW_FLAG = False
+    HW_system = system_main(5)
+    #HW_system.testBtnInterrupt()
+    HW_system.runCollection()
+    
+    

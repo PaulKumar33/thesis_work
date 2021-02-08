@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-df = pd.read_excel("./decision_data.xlsx", "scheme_1")
+df = pd.read_excel("./decision_data.xlsx", "schema_1")
 #df = df.drop(columns=['figure'])
 
 df_mat = df.values.tolist()
