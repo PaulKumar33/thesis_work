@@ -205,19 +205,14 @@ class system_main:
                 variance_pt.append(Sk / self.buffer_length)
                 variance_time_pt.append(t)
                 if (Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False):
-                    print("Here")
-
                     #if data stop high, we do not care about the direction classification, we record the HW event
                     counter += 1
                     if (counter >= self.low_delay):
                         _event = False
+                        counter = 0
 
                         trig_tracker.append(0)
-                        # slope = (self.csvData[1][-1] - self.csvData[1][-2]) / (
-                        #        self.csvData[0][-1] - self.csvData[0][-2])
                         total_slope.append(1)
-                        total_slope_time.append(t)
-                        slope_1 = 1
 
                         if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None):
                             if (self.stop_index - self.start_index > 1.5):
@@ -226,8 +221,6 @@ class system_main:
                                 #compute the classification
                                 temp = [0, 0, 0, 0, 0, 0, 0, 0]
                                 try:
-                                    '''gradient = ((last_peak - 2.5) - (first_peak - 2.5))/(stop_index - start_index)
-                                    gradient_2 = ((last_peak_2 - 2.5) - (first_peak_2 - 2.5))/(stop_index_2 - start_index_2)'''
                                     print("Here are the peaks: {0}, {1}, {2}, {3}".format(self.first_peak, self.second_peak,
                                                                                           self.second_last_peak, self.last_peak))
                                     print("Here are the peaks: {0}, {1}, {2}, {3}".format(self.first_peak_2, self.second_peak_2,
@@ -296,15 +289,17 @@ class system_main:
                             self.start_index, self.stop_index, self.first_peak, self.first_peak_2, self.second_peak, self.second_peak_2, self.last_peak, self.last_peak_2, self.end_time, self._max_peak, self._min_peak = \
                                 None, None, None, None, None, None, None, None, None, 2.5, 2.5
                             self.second_last_peak, self.second_last_peak_2 = None, None
+
                         else:
                             trig_tracker.append(1)
                             if (self.peak_method == 'peak_detection'):
                                 # simple implementation of the peak detection algorithm
-
                                 # find max
                                 self.runPeakDetection(t)
                     else:
-                        trig_tracker.append(0)
+                        trig_tracker.append(1)
+
+
 
                 elif(Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False):
                     #we have detected movement and no HW event yet
