@@ -24,7 +24,7 @@ FLAGS={
     }
 class system_main:   
     
-    def __init__(self, low_delay, peak_method="peak_detection", window_thresholds=[2.25, 2.75],
+    def __init__(self, low_delay, wait_time, peak_method="peak_detection", window_thresholds=[2.25, 2.75],
                variance_threshold=0.085):
 
         self.filter_length = 21
@@ -41,6 +41,7 @@ class system_main:
         self.RECORD_FLAG = False
         self.HW_EVENT = 0
         self.HW_COUNT = 0
+        self.wait_time = wait_time
         
         #setu0p the GPIOs for interrupts
         GPIO.setmode(GPIO.BCM)
@@ -74,10 +75,10 @@ class system_main:
         except Exception as e:
             print(e)
 
-    def runCollection(self, sample_points=200):
+    def runCollection(self, sample_points=100):
         print('sleeping for test')
         print(FLAGS)
-        time.sleep(1)
+        time.sleep(self.wait_time)
 
         self.upper = self.thresh_holds[1]
         self.lower = self.thresh_holds[0]
@@ -140,7 +141,7 @@ class system_main:
         print("start")
         while(True):
             #for the sample rate
-            time.sleep(0.03)
+            time.sleep(0.04)
 
             if(FLAGS["HW_FLAG"]):
                 #need to check if we recorded the wash
@@ -152,12 +153,12 @@ class system_main:
                 #set the stop collection flag
                 self.DATA_STOP = True
                 self.STOP_TIME = time.time()
-                print("Event recorded")
+                print(f"Event recorded: {t}")
 
                 #we want to continue onto the next iteration. Also stop tracking for a few seconds and refresh the buffers
                 continue
 
-            if(time.time() - self.STOP_TIME > 1 and self.DATA_STOP == True):
+            if(time.time() - self.STOP_TIME > 3 and self.DATA_STOP == True):
                 print("recordin starting again")
                 self.DATA_STOP = False
 
@@ -201,6 +202,10 @@ class system_main:
                     # update recursive variables
                     var_mean = var_mean_1
                     Sk = Sk_1
+                
+                if(self.DATA_STOP == True):
+                    #force the variance signal low
+                    Sk = 0
 
                 variance_pt.append(Sk / self.buffer_length)
                 variance_time_pt.append(t)
@@ -209,13 +214,13 @@ class system_main:
                     counter += 1
                     if (counter >= self.low_delay):
                         _event = False
-                        counter = 0
+                        #counter = 0
 
                         trig_tracker.append(0)
                         total_slope.append(1)
 
                         if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None):
-                            if (self.stop_index - self.start_index > 1.5):
+                            if (self.stop_index - self.start_index > 1.25):
                                 self.HW_EVENT += 1
 
                                 #compute the classification
@@ -290,16 +295,12 @@ class system_main:
                                 None, None, None, None, None, None, None, None, None, 2.5, 2.5
                             self.second_last_peak, self.second_last_peak_2 = None, None
 
-                        else:
-                            trig_tracker.append(1)
-                            if (self.peak_method == 'peak_detection'):
-                                # simple implementation of the peak detection algorithm
-                                # find max
-                                self.runPeakDetection(t)
                     else:
                         trig_tracker.append(1)
-
-
+                        if (self.peak_method == 'peak_detection'):
+                            # simple implementation of the peak detection algorithm
+                            # find max
+                            self.runPeakDetection(t)                    
 
                 elif(Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False):
                     #we have detected movement and no HW event yet
@@ -310,6 +311,9 @@ class system_main:
 
                     if(self.peak_method == "peak_detection"):
                         self.runPeakDetection(t)
+                elif(self.DATA_STOP == True):
+                    trig_tracker.append(0)
+                    Sk = 0
 
                 trig_time.append(t)
 
@@ -318,15 +322,21 @@ class system_main:
                 break
 
         print(f"elapsed time {tok - tik}")
-        print(f"sample rate: {len(self.csvData[1]) / (tok - tik)}")
-
-        print(f"max peaks: {self.max_points}")
-        print(f"min peaks: {self.min_points}")
+        print(f"sample rate: {len(self.csvData[1]) / (tok - tik)}\n")
+        
+        
+        print(f"total HW events: {self.HW_EVENT}")
+        print(f"total HW completed: {self.HW_COUNT}")
 
         with open('decision_data.csv', 'a') as fd:
             # fd.write(self.csv_write)
             writer = csv.writer(fd)
             for row in self.csv_write:
+                writer.writerow(row)
+        
+        with open("recorded_data.csv", "a") as fl:
+            writer = csv.writer(fl)
+            for row in self.csvData:
                 writer.writerow(row)
 
         fig, axs = plt.subplots(4)
@@ -614,8 +624,8 @@ class system_main:
 
 if __name__=="__main__":
     HW_FLAG = False
-    HW_system = system_main(5)
+    HW_system = system_main(15, 5)
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection()
+    HW_system.runCollection(100)
     
     
