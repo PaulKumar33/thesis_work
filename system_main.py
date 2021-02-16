@@ -69,6 +69,7 @@ class system_main:
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
+                self.df_mat = df_mat
                 self.tree = impurity.build_tree(df_mat)
                 impurity.print_tree(self.tree)
                 print("starting capture")
@@ -77,6 +78,12 @@ class system_main:
             print(e)
 
     def runCollection(self, sample_points=100):
+        df = pd.read_excel("./decision_data-DESKTOP-BH8J29M.xlsx", "scheme_1")
+        # df = df.drop(columns=['figure'])
+
+        df_mat = df.values.tolist()
+        self.df_mat = df_mat
+        self.tree = impurity.build_tree(df_mat)
         print('sleeping for test')
         print(FLAGS)
         time.sleep(self.wait_time)
@@ -647,8 +654,8 @@ class system_main:
 
 if __name__=="__main__":
     HW_FLAG = False
-    HW_system = system_main(15, 3, window_thresholds=[2.15,2.85])
+    HW_system = system_main(15, 3, window_thresholds=[2.00,3.00])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(300)
+    HW_system.runCollection(8000)
     
     
