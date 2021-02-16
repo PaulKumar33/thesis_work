@@ -291,7 +291,7 @@ class system_main:
                                 #    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2], self.tree)
                                 '''_classify = impurity.classify(
                                     [first_peak, last_peak, first_peak_2, last_peak_2, second_peak, second_peak_2, gradient, gradient_2], self.tree)'''
-                                gradient_2=-1
+                                #gradient_2=-1
                                 _classify = impurity.classify(
                                     [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5],
                                      temp[6], temp[7]], self.tree)
@@ -656,6 +656,6 @@ if __name__=="__main__":
     HW_FLAG = False
     HW_system = system_main(15, 3, window_thresholds=[2.00,3.00])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(8000)
+    HW_system.runCollection(10000)
     
     
