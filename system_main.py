@@ -78,7 +78,7 @@ class system_main:
             print(e)
 
     def runCollection(self, sample_points=100):
-        df = pd.read_excel("./decision_data-DESKTOP-BH8J29M.xlsx", "scheme_1")
+        df = pd.read_excel("./decision_data_new.xlsx", "wall_binary")
         # df = df.drop(columns=['figure'])
 
         df_mat = df.values.tolist()

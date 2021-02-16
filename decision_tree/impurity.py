@@ -3,7 +3,6 @@ import pandas as pd
 
 
 df = pd.read_excel("../decision_data_new.xlsx", "wall_binary_2")
-#df = df.drop(columns=['figure'])
 
 df_mat = df.values.tolist()
 
