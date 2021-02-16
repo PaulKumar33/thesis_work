@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-df = pd.read_excel("../decision_data_new.xlsx", "wall_binary")
+df = pd.read_excel("./decision_data_new.xlsx", "wall_binary")
 #df = df.drop(columns=['figure'])
 
 df_mat = df.values.tolist()
