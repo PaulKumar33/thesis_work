@@ -27,7 +27,7 @@ class system_main:
     def __init__(self, low_delay, wait_time, peak_method="peak_detection", window_thresholds=[2.25, 2.75],
                variance_threshold=0.085):
 
-        self.filter_length = 21
+        self.filter_length = 3
         self.buffer_length = 16 #length of the variance data buffer
         self.low_delay = low_delay
         self.thresh_holds = window_thresholds
@@ -47,7 +47,8 @@ class system_main:
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         
-        GPIO.add_event_detect(24, GPIO.RISING, callback=softwareBtnInterrupt, bouncetime=300)        
+        GPIO.add_event_detect(24, GPIO.RISING, callback=softwareBtnInterrupt, bouncetime=300)
+        GPIO.setup(16, GPIO.OUT)
 
         try:
             if (os.name == 'nt'):
@@ -141,7 +142,7 @@ class system_main:
         print("start")
         while(True):
             #for the sample rate
-            time.sleep(0.04)
+            time.sleep(0.035)
 
             if(FLAGS["HW_FLAG"]):
                 #need to check if we recorded the wash
@@ -158,13 +159,14 @@ class system_main:
                 #we want to continue onto the next iteration. Also stop tracking for a few seconds and refresh the buffers
                 continue
 
-            if(time.time() - self.STOP_TIME > 3 and self.DATA_STOP == True):
+            if(time.time() - self.STOP_TIME > 4.5 and self.DATA_STOP == True):
                 print("recordin starting again")
                 self.DATA_STOP = False
 
 
             # implement the moving average filter - before the buffer fills
-            if (len(avg_buffer) < self.filter_length):
+            #if (len(self.csvData[1]) < self.filter_length):
+            if (True):
                 t = time.time() - tik
                 self.csvData[0].append(t)
                 self.csvData[1].append(float(self.mcp.read_IO(0) / 65355 * 5))
@@ -172,15 +174,17 @@ class system_main:
 
             #after the buffer fills
             else:
-                data = float(self.mcp.read_IO(0) / 65355 * 5)
-                data1 = float(self.mcp.read_IO(1) / 65355 * 5)
+                data = float(self.mcp.read_IO(0) / 65355 * 5)/(self.filter_length)
+                data1 = float(self.mcp.read_IO(1) / 65355 * 5)/(self.filter_length)
                 # print("DATA: {}".format(data/65355*5.2))
                 # data = struct.unpack('f', self.rawData)[0]/self.filter_length
 
                 #implement the filter
                 for i in range(self.filter_length - 1):
-                    data += self.csvData[1][-(i + 1)]
-                    data1 += self.csvData[2][-(i + 1)]
+                    data += self.csvData[1][-(i + 1)]/(self.filter_length)
+                    data1 += self.csvData[2][-(i + 1)]/(self.filter_length)
+                t = time.time() - tik
+                self.csvData[0].append(t)
                 self.csvData[1].append(data)
                 self.csvData[2].append(data1)
 
@@ -215,7 +219,7 @@ class system_main:
                     if (counter >= self.low_delay):
                         _event = False
                         #counter = 0
-
+                        self.gpioLOW(16)
                         trig_tracker.append(0)
                         total_slope.append(1)
 
@@ -241,12 +245,15 @@ class system_main:
 
                                 temp[0] = 1 if self.first_peak >= 2.5 else 0
                                 temp[1] = 1 if self.last_peak >= 2.5 else 0
-                                # temp[2] = 1 if gradient >= 0 else 0
+                                #temp[2] = 1 
                                 temp[2] = 1 if self.first_peak_2 >= 2.5 else 0
+                                #temp[3] = 1 
                                 temp[3] = 1 if self.last_peak_2 >= 2.5 else 0
                                 temp[4] = 1 if self.second_peak >= 2.5 else 0
+                                #temp[5] = 1 
                                 temp[5] = 1 if self.second_peak_2 >= 2.5 else 0
                                 temp[6] = 1 if self.second_last_peak >= 2.5 else 0
+                                #temp[7] = 1 
                                 temp[7] = 1 if self.second_last_peak_2 >= 2.5 else 0
 
                                 # time_period = end_time - start_time
@@ -277,6 +284,7 @@ class system_main:
                                 #    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2], self.tree)
                                 '''_classify = impurity.classify(
                                     [first_peak, last_peak, first_peak_2, last_peak_2, second_peak, second_peak_2, gradient, gradient_2], self.tree)'''
+                                gradient_2=-1
                                 _classify = impurity.classify(
                                     [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5],
                                      temp[6], temp[7]], self.tree)
@@ -286,6 +294,11 @@ class system_main:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
                                 print("Predicted: {}".format(max_class))
+                                if(max_class == 'right'):
+                                    self.gpioLOW(16)
+                                else:
+                                    self.gpioHIGH(16)
+                                
                                 self.csv_write.append(
                                     [self.first_peak, self.second_peak, self.second_last_peak, self.last_peak, self.first_peak_2, self.second_peak_2,
                                      self.second_last_peak_2, self.last_peak_2, self.second_peak, temp[0], temp[1], gradient, temp[2],
@@ -297,6 +310,7 @@ class system_main:
 
                     else:
                         trig_tracker.append(1)
+                        self.gpioHIGH(16)
                         if (self.peak_method == 'peak_detection'):
                             # simple implementation of the peak detection algorithm
                             # find max
@@ -305,6 +319,7 @@ class system_main:
                 elif(Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False):
                     #we have detected movement and no HW event yet
                     _event = True
+                    self.gpioHIGH(16)
                     window.append(t)
                     trig_tracker.append(1)
                     counter = 0
@@ -312,6 +327,7 @@ class system_main:
                     if(self.peak_method == "peak_detection"):
                         self.runPeakDetection(t)
                 elif(self.DATA_STOP == True):
+                    self.gpioLOW(16)
                     trig_tracker.append(0)
                     Sk = 0
 
@@ -328,7 +344,7 @@ class system_main:
         print(f"total HW events: {self.HW_EVENT}")
         print(f"total HW completed: {self.HW_COUNT}")
 
-        with open('decision_data.csv', 'a') as fd:
+        with open('new_datas.csv', 'a') as fd:
             # fd.write(self.csv_write)
             writer = csv.writer(fd)
             for row in self.csv_write:
@@ -338,6 +354,7 @@ class system_main:
             writer = csv.writer(fl)
             for row in self.csvData:
                 writer.writerow(row)
+        self.gpioLOW(16)
 
         fig, axs = plt.subplots(4)
 
@@ -621,11 +638,17 @@ class system_main:
             if(time.time() - tik > 10):
                 print("test done")
                 return
+    
+    def gpioHIGH(self,gpio):
+        GPIO.output(gpio, 1)
+    
+    def gpioLOW(self,gpio):
+        GPIO.output(gpio, 0)
 
 if __name__=="__main__":
     HW_FLAG = False
-    HW_system = system_main(15, 5)
+    HW_system = system_main(15, 3, window_thresholds=[2.15,2.85])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(100)
+    HW_system.runCollection(300)
     
     
