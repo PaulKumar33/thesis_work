@@ -80,6 +80,8 @@ class system_main:
     def runCollection(self, sample_points=100):
         df = pd.read_excel("./decision_data_new.xlsx", "wall_binary_2")
         # df = df.drop(columns=['figure'])
+        
+        DIRECTION_FLAG = 0
 
         df_mat = df.values.tolist()
         self.df_mat = df_mat
@@ -233,7 +235,7 @@ class system_main:
 
                         if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None):
                             if (self.stop_index - self.start_index > 1.25):
-                                self.HW_EVENT += 1
+                                #self.HW_EVENT += 1
 
                                 #compute the classification
                                 temp = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -302,10 +304,17 @@ class system_main:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
                                 print("Predicted: {}".format(max_class))
-                                if(max_class == 'right'):
+                                if(max_class == 'right' and DIRECTION_FLAG == 0):
+                                    
                                     self.gpioLOW(16)
-                                else:
+                                elif(max_class == 'right' and DIRECTION_FLAG == 1):
+                                    self.HW_EVENT += 1
                                     self.gpioHIGH(16)
+                                elif(max_class == 'left' and DIRECTION_FLAG == 0):
+                                    self.gpioHIGH(16)
+                                elif(max_class == 'left' and DIRECTION_FLAG == 1):
+                                    self.HW_EVENT += 1
+                                    self.gpioLOW(16)
                                 
                                 self.csv_write.append(
                                     [self.first_peak, self.second_peak, self.second_last_peak, self.last_peak, self.first_peak_2, self.second_peak_2,
@@ -655,8 +664,8 @@ class system_main:
 
 if __name__=="__main__":
     HW_FLAG = False
-    HW_system = system_main(15, 3, window_thresholds=[2.00,3.00])
+    HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(10000)
+    HW_system.runCollection(1000)
     
     
