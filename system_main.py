@@ -135,7 +135,7 @@ class system_main:
         self._min_peak = 2.5
         self._max_peak = 2.5
 
-        self.DATA_STOP = True
+        self.DATA_STOP = False
         self.STOP_TIME = 0
 
         counter = 5
@@ -224,8 +224,10 @@ class system_main:
 
                 variance_pt.append(Sk / self.buffer_length)
                 variance_time_pt.append(t)
-                if ((Sk / self.buffer_length < self.var_limit and self.DATA_STOP) == False or
-                        (Sk_2/self.buffer_length < self.var_limit and self.DATA_STOP)):
+                print(Sk / self.buffer_length)
+                print(Sk_2/self.buffer_length)
+                if ((Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False) or
+                        (Sk_2/self.buffer_length < self.var_limit and self.DATA_STOP == False)):
                     #if data stop high, we do not care about the direction classification, we record the HW event
                     counter += 1
                     if (counter >= self.low_delay):
@@ -285,6 +287,7 @@ class system_main:
                             self.second_last_peak, self.second_last_peak_2 = None, None
 
                     else:
+
                         trig_tracker.append(1)
                         self.gpioHIGH(16)
                         if (self.peak_method == 'peak_detection'):
@@ -292,8 +295,10 @@ class system_main:
                             # find max
                             self.runPeakDetection(t)                    
 
-                elif(Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False):
+                elif((Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False) or
+                     (Sk_2/self.buffer_length > self.var_limit and self.DATA_STOP == False)):
                     #we have detected movement and no HW event yet
+                    print("Trigged")
                     _event = True
                     self.gpioHIGH(16)
                     window.append(t)
