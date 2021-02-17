@@ -65,7 +65,7 @@ class system_main:
             elif (os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data_new.xlsx", "wall_binary_2")
+                df = pd.read_excel("./decision_data_new.xlsx", "adjusted_lens")
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
@@ -278,7 +278,7 @@ class system_main:
                                 self.csv_write.append(
                                     [self.first_peak, self.second_peak, self.second_last_peak, self.last_peak, self.first_peak_2, self.second_peak_2,
                                      self.second_last_peak_2, self.last_peak_2, self.second_peak, temp[0], temp[1], gradient, temp[2],
-                                     temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7]])
+                                     temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7], _classify])
 
                             self.start_index, self.stop_index, self.first_peak, self.first_peak_2, self.second_peak, self.second_peak_2, self.last_peak, self.last_peak_2, self.end_time, self._max_peak, self._min_peak = \
                                 None, None, None, None, None, None, None, None, None, 2.5, 2.5
@@ -372,6 +372,10 @@ class system_main:
         plt.show()
 
     def directionIndication(self, max_class, DIRECTION_FLAG):
+        '''
+        left  - 0
+        right - 1
+        '''
         if (max_class == 'right' and DIRECTION_FLAG == 0):
             self.gpioLOW(16)
         elif (max_class == 'right' and DIRECTION_FLAG == 1):
@@ -379,8 +383,8 @@ class system_main:
             self.gpioHIGH(16)
         elif (max_class == 'left' and DIRECTION_FLAG == 0):
             self.gpioHIGH(16)
-        elif (max_class == 'left' and DIRECTION_FLAG == 1):
             self.HW_EVENT += 1
+        elif (max_class == 'left' and DIRECTION_FLAG == 1):
             self.gpioLOW(16)
 
 
@@ -660,6 +664,6 @@ if __name__=="__main__":
     HW_FLAG = False
     HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(10000)
+    HW_system.runCollection(5000)
     
     
