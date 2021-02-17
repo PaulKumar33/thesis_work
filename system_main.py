@@ -224,9 +224,7 @@ class system_main:
 
                 variance_pt.append(Sk / self.buffer_length)
                 variance_time_pt.append(t)
-                print(Sk / self.buffer_length)
-                print(Sk_2/self.buffer_length)
-                if ((Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False) or
+                if ((Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False) and
                         (Sk_2/self.buffer_length < self.var_limit and self.DATA_STOP == False)):
                     #if data stop high, we do not care about the direction classification, we record the HW event
                     counter += 1
@@ -267,7 +265,7 @@ class system_main:
                                 7 - second_last_peak_2
                                 '''
 
-                                _classify = impurity.classify([temp[0], temp[1], gradient, temp[4], temp[6]])
+                                _classify = impurity.classify([temp[0], temp[1], gradient, temp[4], temp[6]], self.tree)
                                 max_guess = 0
                                 max_class = None
 
@@ -298,7 +296,6 @@ class system_main:
                 elif((Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False) or
                      (Sk_2/self.buffer_length > self.var_limit and self.DATA_STOP == False)):
                     #we have detected movement and no HW event yet
-                    print("Trigged")
                     _event = True
                     self.gpioHIGH(16)
                     window.append(t)
@@ -663,6 +660,6 @@ if __name__=="__main__":
     HW_FLAG = False
     HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(1000)
+    HW_system.runCollection(10000)
     
     
