@@ -65,7 +65,7 @@ class system_main:
             elif (os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data.xlsx", "scheme_1")
+                df = pd.read_excel("./decision_data_new.xlsx", "wall_binary_2")
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
@@ -78,14 +78,9 @@ class system_main:
             print(e)
 
     def runCollection(self, sample_points=100):
-        df = pd.read_excel("./decision_data_new.xlsx", "wall_binary_2")
-        # df = df.drop(columns=['figure'])
         
         DIRECTION_FLAG = 0
 
-        df_mat = df.values.tolist()
-        self.df_mat = df_mat
-        self.tree = impurity.build_tree(df_mat)
         print(self.tree)
         print('sleeping for test')
         print(FLAGS)
@@ -100,13 +95,11 @@ class system_main:
 
         avg_buffer = []
         data_buffer = []
+        data_buffer_2 = []
         trig_tracker = []
         trig_time = []
         self.slope_pts = []
         self.slope_time = []
-
-        total_slope = []
-        total_slope_time = []
 
         variance_pt = []
         variance_time_pt = []
@@ -138,9 +131,6 @@ class system_main:
         self.stop_index = None
         self.start_index_2 = None
         self.stop_index_2 = None
-
-        self.tracked_signal_marks = []
-
 
         self._min_peak = 2.5
         self._max_peak = 2.5
@@ -202,28 +192,40 @@ class system_main:
             #implement moving variance
             if (len(data_buffer) < self.buffer_length):
                 data_buffer.append(self.csvData[1][-1])
+                data_buffer_2.append(self.csvData[2][-1])
             else:
                 data_buffer = data_buffer[1:] + [self.csvData[1][-1]]
+                data_buffer_2 = data_buffer_2[1:] + [self.csvData[2][-1]]
 
                 var_mean = data_buffer[0]
+                var_mean_2 = data_buffer_2[0]
+                Sk_2 = 0
                 Sk = 0
 
                 #moving variance
                 for k in range(1, len(data_buffer)):
+
+                    #variance
                     var_mean_1 = var_mean + (1 / self.buffer_length) * (data_buffer[k] - var_mean)
+                    var_mean_21 = var_mean_2 + (1 / self.buffer_length) * (data_buffer_2[k] - var_mean_2)
                     Sk_1 = Sk + (data_buffer[k] - var_mean_1) * (data_buffer[k] - var_mean)
+                    Sk_21 = Sk_2 + (data_buffer_2[k] - var_mean_2)*(data_buffer_2[k] - var_mean_2)
 
                     # update recursive variables
                     var_mean = var_mean_1
+                    var_mean_2 = var_mean_21
                     Sk = Sk_1
+                    Sk_2 = Sk_21
                 
                 if(self.DATA_STOP == True):
                     #force the variance signal low
                     Sk = 0
+                    Sk_2 = 0
 
                 variance_pt.append(Sk / self.buffer_length)
                 variance_time_pt.append(t)
-                if (Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False):
+                if ((Sk / self.buffer_length < self.var_limit and self.DATA_STOP) == False or
+                        (Sk_2/self.buffer_length < self.var_limit and self.DATA_STOP)):
                     #if data stop high, we do not care about the direction classification, we record the HW event
                     counter += 1
                     if (counter >= self.low_delay):
@@ -231,91 +233,48 @@ class system_main:
                         #counter = 0
                         self.gpioLOW(16)
                         trig_tracker.append(0)
-                        total_slope.append(1)
 
                         if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None):
                             if (self.stop_index - self.start_index > 1.25):
-                                #self.HW_EVENT += 1
 
                                 #compute the classification
-                                temp = [0, 0, 0, 0, 0, 0, 0, 0]
                                 try:
-                                    print("Here are the peaks: {0}, {1}, {2}, {3}".format(self.first_peak, self.second_peak,
-                                                                                          self.second_last_peak, self.last_peak))
-                                    print("Here are the peaks: {0}, {1}, {2}, {3}".format(self.first_peak_2, self.second_peak_2,
-                                                                                          self.second_last_peak_2,
-                                                                                          self.last_peak_2))
-                                    gradient = ((self.last_peak + self.second_last_peak) / 2 - (self.first_peak + self.second_peak) / 2) / (
-                                                self.stop_index - self.start_index)
-                                    gradient_2 = ((self.last_peak_2 + self.second_last_peak_2) / 2 - (
-                                                self.first_peak_2 + self.second_peak_2) / 2) / (self.stop_index_2 - self.start_index_2)
+                                    self.printPeaksTest()
+                                    gradient = self.getGradients(self.first_peak, self.second_peak, self.last_peak, self.second_last_peak, self.stop_index, self.start_index)
+                                    gradient_2 = self.getGradients(self.first_peak_2, self.second_peak_2, self.last_peak_2, self.second_peak_2, self.stop_index, self.start_index)
                                     print("here me gradients: {0}, {1}".format(gradient, gradient_2))
                                 except Exception as e:
                                     print(e)
 
-                                temp[0] = 1 if self.first_peak >= 2.5 else 0
-                                temp[1] = 1 if self.last_peak >= 2.5 else 0
-                                #temp[2] = 1 
-                                temp[2] = 1 if self.first_peak_2 >= 2.5 else 0
-                                #temp[3] = 1 
-                                temp[3] = 1 if self.last_peak_2 >= 2.5 else 0
-                                temp[4] = 1 if self.second_peak >= 2.5 else 0
-                                #temp[5] = 1 
-                                temp[5] = 1 if self.second_peak_2 >= 2.5 else 0
-                                temp[6] = 1 if self.second_last_peak >= 2.5 else 0
-                                #temp[7] = 1 
-                                temp[7] = 1 if self.second_last_peak_2 >= 2.5 else 0
-
-                                # time_period = end_time - start_time
-                                """s_index = between_peak_time.index(start_time)
-                                e_index = between_peak_time.index(end_time)
-                                mean_pk2pk = statistics.mean(between_peak_time[s_index:e_index+1])"""
-
-                                s_index = self.csvData[0].index(self.start_index)
-                                e_index = self.csvData[0].index(self.stop_index)
-
-                                _mean = statistics.mean(self.csvData[1])
-                                variance = statistics.variance(self.csvData[1])
-                                skewness = scipy.stats.skew(self.csvData[1])
-
-                                variance_2 = statistics.variance(self.csvData[2])
-                                skewness_2 = scipy.stats.skew(self.csvData[2])
+                                temp = self.oneHotPeaks([self.first_peak, self.last_peak, self.first_peak_2, self.last_peak_2, self.second_peak, self.second_peak_2, self.second_last_peak, self.second_last_peak_2, self.second_last_peak_2])
 
                                 print(
                                     "#########################Getting features#######################################")
                                 print("")
                                 print("")
 
-                                # self.csv_write.append(start_index, stop_index, first_peak, last_peak, gradient, _max_peak, _min_peak, start_time, end_time, time_period)
-                                self.tracked_signal_marks.append(temp)
-                                # self.csv_write.append([temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, _mean, variance, skewness, variance_2, skewness_2])
-
-                                # _classify = impurity.classify(
-                                #    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2], self.tree)
-                                '''_classify = impurity.classify(
-                                    [first_peak, last_peak, first_peak_2, last_peak_2, second_peak, second_peak_2, gradient, gradient_2], self.tree)'''
                                 #gradient_2=-1
-                                _classify = impurity.classify(
-                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5],
-                                     temp[6], temp[7]], self.tree)
+                                '''
+                                temp0 - first_peak
+                                1 - last_peak                                
+                                2 - first_peak_2
+                                3 - last_peak_2
+                                4 - second_peak
+                                5 - second_peak_2
+                                6 - second_last_peak
+                                7 - second_last_peak_2
+                                '''
+
+                                _classify = impurity.classify([temp[0], temp[1], gradient, temp[4], temp[6]])
                                 max_guess = 0
                                 max_class = None
+
                                 for _class_ in _classify:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
                                 print("Predicted: {}".format(max_class))
-                                if(max_class == 'right' and DIRECTION_FLAG == 0):
-                                    
-                                    self.gpioLOW(16)
-                                elif(max_class == 'right' and DIRECTION_FLAG == 1):
-                                    self.HW_EVENT += 1
-                                    self.gpioHIGH(16)
-                                elif(max_class == 'left' and DIRECTION_FLAG == 0):
-                                    self.gpioHIGH(16)
-                                elif(max_class == 'left' and DIRECTION_FLAG == 1):
-                                    self.HW_EVENT += 1
-                                    self.gpioLOW(16)
-                                
+
+                                self.directionIndication(max_class, DIRECTION_FLAG)
                                 self.csv_write.append(
                                     [self.first_peak, self.second_peak, self.second_last_peak, self.last_peak, self.first_peak_2, self.second_peak_2,
                                      self.second_last_peak_2, self.last_peak_2, self.second_peak, temp[0], temp[1], gradient, temp[2],
@@ -409,6 +368,18 @@ class system_main:
         axs[3].set_ylabel("Voltage [V]")
         plt.grid(True)
         plt.show()
+
+    def directionIndication(self, max_class, DIRECTION_FLAG):
+        if (max_class == 'right' and DIRECTION_FLAG == 0):
+            self.gpioLOW(16)
+        elif (max_class == 'right' and DIRECTION_FLAG == 1):
+            self.HW_EVENT += 1
+            self.gpioHIGH(16)
+        elif (max_class == 'left' and DIRECTION_FLAG == 0):
+            self.gpioHIGH(16)
+        elif (max_class == 'left' and DIRECTION_FLAG == 1):
+            self.HW_EVENT += 1
+            self.gpioLOW(16)
 
 
     def runPeakDetection(self, t):
@@ -638,6 +609,27 @@ class system_main:
                     self.stop_index_2 = t
                     self.end_time = self.csvData[0][-2]
 
+
+    def getGradients(self, first_peak, second_peak, last_peak, second_last_peak, stop_index, start_index):
+
+        gradient = ((last_peak + second_last_peak) / 2 - (first_peak + second_peak) / 2) / (
+                stop_index - start_index)
+
+        return gradient
+
+
+    def printPeaksTest(self):
+        print("Here are the peaks: {0}, {1}, {2}, {3}".format(self.first_peak, self.second_peak,
+                                                              self.second_last_peak, self.last_peak))
+        print("Here are the peaks: {0}, {1}, {2}, {3}".format(self.first_peak_2, self.second_peak_2,
+                                                              self.second_last_peak_2,
+                                                              self.last_peak_2))
+
+    def oneHotPeaks(self, peaks):
+        for i in range(len(peaks)):
+            peaks[i] = 1 if peaks[i] >= 2.5 else 0
+
+        return peaks
 
     def refreshFeatures(self):
         self.start_index, self.stop_index, self.first_peak, self.first_peak_2, self.second_peak, self.second_peak_2, self.last_peak, self.last_peak_2, self.end_time, self._max_peak, self._min_peak = \
