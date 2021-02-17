@@ -664,6 +664,6 @@ if __name__=="__main__":
     HW_FLAG = False
     HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(5000)
+    HW_system.runCollection(900)
     
     
