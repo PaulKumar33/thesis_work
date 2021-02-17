@@ -78,12 +78,13 @@ class system_main:
             print(e)
 
     def runCollection(self, sample_points=100):
-        df = pd.read_excel("./decision_data_new.xlsx", "wall_binary")
+        df = pd.read_excel("./decision_data_new.xlsx", "wall_binary_2")
         # df = df.drop(columns=['figure'])
 
         df_mat = df.values.tolist()
         self.df_mat = df_mat
         self.tree = impurity.build_tree(df_mat)
+        print(self.tree)
         print('sleeping for test')
         print(FLAGS)
         time.sleep(self.wait_time)
