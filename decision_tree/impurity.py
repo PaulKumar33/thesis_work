@@ -8,6 +8,9 @@ import pandas as pd
 df = pd.read_excel("../decision_data_new.xlsx", "wall_binary_2")
 
 df_mat = df.values.tolist()"""
+df = pd.read_excel("../decision_data_new.xlsx", "adjusted_lens")
+
+df_mat = df.values.tolist()
 
 def class_counts(df):
     '''
@@ -254,16 +257,16 @@ def return_model(model):
     print_tree(model)
     return model
 
-"""tree = build_tree(df_mat)
-print_tree(tree)"""
-#_classify = classify([2.192382813,	2.8125,	0.099384282,	2.490029405,	1.213396868,	'no-cross-left'], tree)
+tree = build_tree(df_mat)
+print_tree(tree)
+_classify = classify([2.192382813,	2.8125,	0.099384282,	2.490029405,	1.213396868,	'no-cross-left'], tree)
 
-'''max_guess = 0
+max_guess = 0
 max_class = None
 for _class_ in _classify:
     if(_classify[_class_]>max_guess):
         max_class, max_guess = _class_, _classify[_class_]
 
-print(f"Predicted: {max_class}")'''
+print(f"Predicted: {max_class}")
 
 
