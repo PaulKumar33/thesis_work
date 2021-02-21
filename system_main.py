@@ -93,6 +93,9 @@ class system_main:
 
         tik = time.time()
 
+        #0 first peak, 1 last peak. 2 first peak_2 3 last peak_2
+        self.peak_points = [None, None, None, None]
+
         avg_buffer = []
         data_buffer = []
         data_buffer_2 = []
@@ -240,8 +243,16 @@ class system_main:
                                 #compute the classification
                                 try:
                                     self.printPeaksTest()
-                                    gradient = self.getGradients(self.first_peak, self.second_peak, self.last_peak, self.second_last_peak, self.stop_index, self.start_index)
-                                    gradient_2 = self.getGradients(self.first_peak_2, self.second_peak_2, self.last_peak_2, self.second_peak_2, self.stop_index, self.start_index)
+                                    if(self.peak_points[0] != None and self.peak_points[1] != None):
+                                        gradient = self.getGradients(self.first_peak, self.second_peak, self.last_peak, self.second_last_peak, self.stop_index, self.start_index)
+                                    else:
+                                        gradient = -5
+
+                                    if(self.peak_points[2] != None and self.peak_points[3] != None):
+                                        gradient_2 = self.getGradients(self.first_peak_2, self.second_peak_2, self.last_peak_2, self.second_peak_2, self.stop_index, self.start_index)
+                                    else:
+                                        gradient_2 = -5
+
                                     print("here me gradients: {0}, {1}".format(gradient, gradient_2))
                                 except Exception as e:
                                     print(e)
@@ -265,6 +276,8 @@ class system_main:
                                 7 - second_last_peak_2
                                 '''
 
+                                self.peak_points = self.nullNonePeaks(self.peak_points)
+
                                 _classify = impurity.classify([temp[0], temp[1], gradient, temp[4], temp[6]], self.tree)
                                 max_guess = 0
                                 max_class = None
@@ -278,11 +291,13 @@ class system_main:
                                 self.csv_write.append(
                                     [self.first_peak, self.second_peak, self.second_last_peak, self.last_peak, self.first_peak_2, self.second_peak_2,
                                      self.second_last_peak_2, self.last_peak_2, self.second_peak, temp[0], temp[1], gradient, temp[2],
-                                     temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7], _classify])
+                                     temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7], self.peak_points[0], self.peak_points[1],
+                                     self.peak_points[2], self.peak_points[3], _classify])
 
                             self.start_index, self.stop_index, self.first_peak, self.first_peak_2, self.second_peak, self.second_peak_2, self.last_peak, self.last_peak_2, self.end_time, self._max_peak, self._min_peak = \
                                 None, None, None, None, None, None, None, None, None, 2.5, 2.5
                             self.second_last_peak, self.second_last_peak_2 = None, None
+                            self.peak_points = [None, None, None, None]
 
                     else:
 
@@ -402,12 +417,14 @@ class system_main:
                 if (self.first_peak == None):
                     self.first_peak = self.csvData[1][-2]
                     self.start_index = t
+                    self.peak_points[0] = t
 
                 if (self.last_peak != None and (self.last_peak - 2.5) / (self.csvData[1][-2] - 2.5) < 0):
                     self.second_last_peak = self.last_peak
 
                 self.last_peak = self.csvData[1][-2]
                 self.stop_index = t
+                self.peak_points[1] = t
 
                 if (self.csvData[1][-2] > self._max_peak):
                     self._max_peak = self.csvData[1][-2]
@@ -420,12 +437,15 @@ class system_main:
                 if (self.first_peak == None):
                     self.first_peak = self.csvData[1][-2]
                     self.start_index = t
+                    self.peak_points[0] = t
 
                 if (self.last_peak != None and (self.last_peak - 2.5) / (self.csvData[1][-2] - 2.5) < 0):
                     self.second_last_peak = self.last_peak
 
                 self.last_peak = self.csvData[1][-2]
                 self.stop_index = t
+                self.peak_points[1] = t
+
                 if (self.csvData[1][-2] > self._max_peak):
                     _max_peak = self.csvData[1][-2]
                 prev_peak = 1
@@ -438,12 +458,14 @@ class system_main:
                 if (self.first_peak == None):
                     self.first_peak = self.csvData[1][-2]
                     self.start_index = t
+                    self.peak_points[0] = t
 
                 if (self.last_peak != None and (self.last_peak - 2.5) / (self.csvData[1][-2] - 2.5) < 0):
                     self.second_last_peak = self.last_peak
 
                 self.last_peak = self.csvData[1][-2]
                 self.stop_index = t
+                self.peak_points[1] = t
                 if (self.csvData[1][-2] > self._max_peak):
                     self._max_peak = self.csvData[1][-2]
 
@@ -460,12 +482,14 @@ class system_main:
                     if (self.first_peak_2 == None):
                         self.first_peak_2 = self.csvData[2][-2]
                         self.start_index_2 = t
+                        self.peak_points[2] = t
 
                     if (self.last_peak_2 != None and (self.last_peak_2 - 2.5) / (self.csvData[2][-2] - 2.5) < 0):
                         self.second_last_peak_2 = self.last_peak_2
 
                     self.last_peak_2 = self.csvData[2][-2]
                     self.stop_index_2 = t
+                    self.peak_points[3] = t
                 elif (self.csvData[2][-1] <= self.csvData[2][-2] and self.csvData[2][-3] < self.csvData[2][
                     -2]):
                     self.max_points_2.append(self.csvData[2][-2])
@@ -476,12 +500,15 @@ class system_main:
                     if (self.first_peak_2 == None):
                         self.first_peak_2 = self.csvData[2][-2]
                         self.start_index_2 = t
+                        self.peak_points[2] = t
 
                     if (self.last_peak_2 != None and (self.last_peak_2 - 2.5) / (self.csvData[2][-2] - 2.5) < 0):
                         self.second_last_peak_2 = self.last_peak_2
 
                     self.last_peak_2 = self.csvData[2][-2]
                     self.stop_index_2 = t
+                    self.peak_points[3] = t
+
                 elif (self.csvData[2][-1] < self.csvData[2][-2] and self.csvData[2][-3] <= self.csvData[2][
                     -2]):
                     self.max_points_2.append(self.csvData[2][-2])
@@ -492,12 +519,14 @@ class system_main:
                     if (self.first_peak_2 == None):
                         self.first_peak_2 = self.csvData[2][-2]
                         self.start_index_2 = t
+                        self.peak_points[2] = t
 
                     if (self.last_peak_2 != None and (self.last_peak_2 - 2.5) / (self.csvData[1][-2] - 2.5) < 0):
                         self.second_last_peak_2 = self.last_peak_2
 
                     self.last_peak_2 = self.csvData[2][-2]
                     self.stop_index_2 = t
+                    self.peak_points[3] = t
 
         # now for the mins
         if (self.csvData[1][-2] <= self.lower):
@@ -510,12 +539,14 @@ class system_main:
                 if (self.first_peak == None):
                     self.first_peak = self.csvData[1][-2]
                     self.start_index = t
+                    self.peak_points[0] = t
 
                 if (self.last_peak != None and (self.last_peak - 2.5) / (self.csvData[1][-2] - 2.5) < 0):
                     self.second_last_peak = self.last_peak
 
                 self.last_peak = self.csvData[1][-2]
                 self.stop_index = t
+                self.peak_points[1] = t
                 self.end_time = self.csvData[0][-2]
                 if (self.csvData[1][-2] < self._min_peak):
                     self._min_peak = self.csvData[1][-2]
@@ -529,12 +560,14 @@ class system_main:
                 if (self.first_peak == None):
                     self.first_peak = self.csvData[1][-2]
                     self.start_index = t
+                    self.peak_points[0] = t
 
                 if (self.last_peak != None and (self.last_peak - 2.5) / (self.csvData[1][-2] - 2.5) < 0):
                     self.second_last_peak = self.last_peak
 
                 self.last_peak = self.csvData[1][-2]
                 self.stop_index = t
+                self.peak_points[1] = t
                 self.end_time = self.csvData[0][-2]
                 if (self.csvData[1][-2] < self._min_peak):
                     self._min_peak = self.csvData[1][-2]
@@ -548,12 +581,14 @@ class system_main:
                 if (self.first_peak == None):
                     self.first_peak = self.csvData[1][-2]
                     self.start_index = t
+                    self.peak_points[0] = t
 
                 if (self.last_peak != None and (self.last_peak - 2.5) / (self.csvData[1][-2] - 2.5) < 0):
                     self.second_last_peak = self.last_peak
 
                 self.last_peak = self.csvData[1][-2]
                 self.stop_index = t
+                self.peak_points[1] = t
                 self.end_time = self.csvData[0][-2]
                 if (self.csvData[1][-2] < self._min_peak):
                     self._min_peak = self.csvData[1][-2]
@@ -571,12 +606,14 @@ class system_main:
                     if (self.first_peak_2 == None):
                         self.first_peak_2 = self.csvData[2][-2]
                         self.start_index_2 = t
+                        self.peak_points[2] = t
 
                     if (self.last_peak_2 != None and (self.last_peak_2 - 2.5) / (self.csvData[2][-2] - 2.5) < 0):
                         self.second_last_peak_2 = self.last_peak_2
 
                     self.last_peak_2 = self.csvData[2][-2]
                     self.stop_index_2 = t
+                    self.peak_points[3] = t
                     self.end_time = self.csvData[0][-2]
 
                 elif (self.csvData[2][-1] >= self.csvData[2][-2] and self.csvData[2][-3] > self.csvData[2][
@@ -589,12 +626,14 @@ class system_main:
                     if (self.first_peak_2 == None):
                         self.first_peak_2 = self.csvData[2][-2]
                         self.start_index_2 = t
+                        self.peak_points[2] = t
 
                     if (self.last_peak_2 != None and (self.last_peak_2 - 2.5) / (self.csvData[2][-2] - 2.5) < 0):
                         self.second_last_peak_2 = self.last_peak_2
 
                     self.last_peak_2 = self.csvData[2][-2]
                     self.stop_index_2 = t
+                    self.peak_points[3] = t
                     self.end_time = self.csvData[0][-2]
 
                 elif (self.csvData[2][-1] > self.csvData[2][-2] and self.csvData[2][-3] >= self.csvData[2][
@@ -607,12 +646,14 @@ class system_main:
                     if (self.first_peak_2 == None):
                         self.first_peak_2 = self.csvData[2][-2]
                         self.start_index_2 = t
+                        self.peak_points[2] = t
 
                     if (self.last_peak_2 != None and (self.last_peak_2 - 2.5) / (self.csvData[2][-2] - 2.5) < 0):
                         self.second_last_peak_2 = self.last_peak_2
 
                     self.last_peak_2 = self.csvData[2][-2]
                     self.stop_index_2 = t
+                    self.peak_points[3] = t
                     self.end_time = self.csvData[0][-2]
 
 
@@ -636,6 +677,12 @@ class system_main:
             peaks[i] = 1 if peaks[i] >= 2.5 else 0
 
         return peaks
+
+    def nullNonePeaks(self, peaks):
+        ret_peaks = [-1,-1,-1,-1]
+        for index in range(len(peaks)):
+            ret_peaks[index] = peaks[index] if peaks[index] != None else -1
+
 
     def refreshFeatures(self):
         self.start_index, self.stop_index, self.first_peak, self.first_peak_2, self.second_peak, self.second_peak_2, self.last_peak, self.last_peak_2, self.end_time, self._max_peak, self._min_peak = \
