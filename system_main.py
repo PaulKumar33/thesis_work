@@ -279,10 +279,17 @@ class system_main:
                                 6 - second_last_peak
                                 7 - second_last_peak_2
                                 '''
-
                                 self.peak_points = self.nullNonePeaks(self.peak_points)
+                                
+                                #get first peak differential
+                                first_peak_differential = 1 if self.peak_points[0] < self.peak_points[2] else 0
+                                last_peak_differential = 1 if self.peak_points[1] < self.peak_points[3] else 0
+
                                 print(type(temp[0]), type(temp[1]), type(temp[4]), type(temp[6]), type(gradient))
-                                _classify = impurity.classify([temp[0], temp[1], gradient, temp[4], temp[6]], self.tree)
+                                _classify = impurity.classify([temp[0], temp[1], gradient, temp[2], temp[3],
+                                                               gradient_2, temp[4], temp[5], temp[6],
+                                                               temp[7],first_peak_differential,
+                                                               last_peak_differential], self.tree)
                                 max_guess = 0
                                 max_class = None
 
@@ -298,10 +305,6 @@ class system_main:
                                 else:
                                     peak_differential_time = 0
                                     
-                                #get first peak differential
-                                first_peak_differential = 1 if self.peak_points[0] < self.peak_points[2] else 0
-                                last_peak_differential = 1 if self.peak_points[1] < self.peak_points[3] else 0
-
                                 self.directionIndication(max_class, DIRECTION_FLAG)
                                 self.csv_write.append(
                                     [self.first_peak, self.second_peak, self.second_last_peak, self.last_peak, self.first_peak_2, self.second_peak_2,
@@ -730,6 +733,6 @@ if __name__=="__main__":
     HW_FLAG = False
     HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(900)
+    HW_system.runCollection(5000)
     
     
