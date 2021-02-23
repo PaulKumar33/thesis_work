@@ -65,7 +65,7 @@ class system_main:
             elif (os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data_new.xlsx", "adjusted_lens")
+                df = pd.read_excel("./decision_data_new.xlsx", "angled_lens")
                 # df = df.drop(columns=['figure'])
 
                 df_mat = df.values.tolist()
