@@ -65,7 +65,8 @@ class system_main:
             elif (os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data_new.xlsx", "wall_binary_2")
+                df = pd.read_excel("./decision_data_new.xlsx", "angled_lens")
+                # df = df.drop(columns=['figure'])
                 df_mat = df.values.tolist()
                 
                 self.tree = impurity.build_tree(df_mat)
@@ -729,6 +730,6 @@ if __name__=="__main__":
     HW_FLAG = False
     HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(9000)
+    HW_system.runCollection(900)
     
     
