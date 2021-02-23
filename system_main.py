@@ -65,11 +65,9 @@ class system_main:
             elif (os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data_new.xlsx", "adjusted_lens")
-                # df = df.drop(columns=['figure'])
-
+                df = pd.read_excel("./decision_data_new.xlsx", "wall_binary_2")
                 df_mat = df.values.tolist()
-                self.df_mat = df_mat
+                
                 self.tree = impurity.build_tree(df_mat)
                 impurity.print_tree(self.tree)
                 print("starting capture")
@@ -81,7 +79,7 @@ class system_main:
         
         DIRECTION_FLAG = 0
 
-        print(self.tree)
+        impurity.print_tree(self.tree)
         print('sleeping for test')
         print(FLAGS)
         time.sleep(self.wait_time)
@@ -237,8 +235,13 @@ class system_main:
                         self.gpioLOW(16)
                         trig_tracker.append(0)
 
-                        if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None):
-                            if (self.stop_index - self.start_index > 1.25):
+                        if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None or
+                            (self.peak_points[2] != None and self.peak_points[3] != None)):
+                            if(self.stop_index != None and self.start_index != None):
+                                interval = self.stop_index - self.start_index
+                            elif(self.peak_points[2] != None and self.peak_points[3] != None):
+                                interval = self.peak_points[3] - self.peak_points[2]
+                            if (interval > 1.25):
 
                                 #compute the classification
                                 try:
@@ -246,12 +249,12 @@ class system_main:
                                     if(self.peak_points[0] != None and self.peak_points[1] != None):
                                         gradient = self.getGradients(self.first_peak, self.second_peak, self.last_peak, self.second_last_peak, self.stop_index, self.start_index)
                                     else:
-                                        gradient = -5
+                                        gradient = 9999
 
                                     if(self.peak_points[2] != None and self.peak_points[3] != None):
-                                        gradient_2 = self.getGradients(self.first_peak_2, self.second_peak_2, self.last_peak_2, self.second_peak_2, self.stop_index, self.start_index)
+                                        gradient_2 = self.getGradients(self.first_peak_2, self.second_peak_2, self.last_peak_2, self.second_peak_2, self.peak_points[3], self.peak_points[2])
                                     else:
-                                        gradient_2 = -5
+                                        gradient_2 = 9999
 
                                     print("here me gradients: {0}, {1}".format(gradient, gradient_2))
                                 except Exception as e:
@@ -277,7 +280,7 @@ class system_main:
                                 '''
 
                                 self.peak_points = self.nullNonePeaks(self.peak_points)
-
+                                print(type(temp[0]), type(temp[1]), type(temp[4]), type(temp[6]), type(gradient))
                                 _classify = impurity.classify([temp[0], temp[1], gradient, temp[4], temp[6]], self.tree)
                                 max_guess = 0
                                 max_class = None
@@ -286,13 +289,23 @@ class system_main:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
                                 print("Predicted: {}".format(max_class))
+                                
+                                if(self.peak_points[1]-self.peak_points[0] >=
+                                     self.peak_points[3]-self.peak_points[2] + 0.5 or self.peak_points[1]-self.peak_points[0] + 0.5 <=
+                                     self.peak_points[3]-self.peak_points[2]):
+                                    peak_differential_time = 1
+                                else:
+                                    peak_differential_time = 0
+                                    
+                                #get first peak differential
+                                first_peak_differential = 1 if self.peak_points[0] < self.peak_points[2] else 0
+                                last_peak_differential = 1 if self.peak_points[1] < self.peak_points[3] else 0
 
                                 self.directionIndication(max_class, DIRECTION_FLAG)
                                 self.csv_write.append(
                                     [self.first_peak, self.second_peak, self.second_last_peak, self.last_peak, self.first_peak_2, self.second_peak_2,
                                      self.second_last_peak_2, self.last_peak_2, self.second_peak, temp[0], temp[1], gradient, temp[2],
-                                     temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7], self.peak_points[0], self.peak_points[1],
-                                     self.peak_points[2], self.peak_points[3], _classify])
+                                     temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7],first_peak_differential, last_peak_differential, _classify])
 
                             self.start_index, self.stop_index, self.first_peak, self.first_peak_2, self.second_peak, self.second_peak_2, self.last_peak, self.last_peak_2, self.end_time, self._max_peak, self._min_peak = \
                                 None, None, None, None, None, None, None, None, None, 2.5, 2.5
@@ -674,7 +687,10 @@ class system_main:
 
     def oneHotPeaks(self, peaks):
         for i in range(len(peaks)):
-            peaks[i] = 1 if peaks[i] >= 2.5 else 0
+            if(peaks[i] != None):
+                peaks[i] = 1 if peaks[i] >= 2.5 else 0
+            else:
+                peaks[i] = -1
 
         return peaks
 
@@ -682,6 +698,8 @@ class system_main:
         ret_peaks = [-1,-1,-1,-1]
         for index in range(len(peaks)):
             ret_peaks[index] = peaks[index] if peaks[index] != None else -1
+        
+        return ret_peaks
 
 
     def refreshFeatures(self):
@@ -711,6 +729,6 @@ if __name__=="__main__":
     HW_FLAG = False
     HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(900)
+    HW_system.runCollection(9000)
     
     
