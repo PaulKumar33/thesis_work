@@ -3,14 +3,13 @@ import pandas as pd
 
 
 
-"""df = pd.read_excel("./decision_data_new.xlsx", "wall_binary")
+#df = pd.read_excel("./decision_data_new.xlsx", "wall_binary")
 #df = df.drop(columns=['figure'])
-df = pd.read_excel("../decision_data_new.xlsx", "wall_binary_2")
+df = pd.read_excel("./decision_data_new.xlsx", "adjusted_lens")
 
-df_mat = df.values.tolist()"""
+df_mat = df.values.tolist()
 '''df = pd.read_excel("../decision_data_new.xlsx", "adjusted_lens")
-
-df_mat = df.values.tolist()'''
+'''
 
 def class_counts(df):
     '''
