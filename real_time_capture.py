@@ -60,7 +60,7 @@ class serialCapture:
 
     def printCollectedData(self, save_data, save_plot, sample_points = 400):
         print('sleeping for test')
-        time.sleep(5)
+        time.sleep(0)
         if(os.name == "nt"):
             self.handle.reset_input_buffer()
 
@@ -305,15 +305,15 @@ class serialCapture:
                                 #    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], variance, skewness, variance_2, skewness_2], self.tree)
                                 '''_classify = impurity.classify(
                                     [first_peak, last_peak, first_peak_2, last_peak_2, second_peak, second_peak_2, gradient, gradient_2], self.tree)'''
-                                _classify = impurity.classify(
-                                    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7]], self.tree)
-                                max_guess = 0
+                                #_classify = impurity.classify(
+                                #    [temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7]], self.tree)
+                                '''max_guess = 0
                                 max_class = None
                                 for _class_ in _classify:
                                     if (_classify[_class_] > max_guess):
-                                        max_class, max_guess = _class_, _classify[_class_]
-                                print("Predicted: {}".format(max_class))
-                                self.csv_write.append([first_peak, second_peak, second_last_peak, last_peak, first_peak_2, second_peak_2, second_last_peak_2, last_peak_2, second_peak, temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7]])
+                                        max_class, max_guess = _class_, _classify[_class_]'''
+                                #print("Predicted: {}".format(max_class))
+                                #self.csv_write.append([first_peak, second_peak, second_last_peak, last_peak, first_peak_2, second_peak_2, second_last_peak_2, last_peak_2, second_peak, temp[0], temp[1], gradient, temp[2], temp[3], gradient_2, temp[4], temp[5], temp[6], temp[7]])
                                 
                         start_index, stop_index, first_peak, first_peak_2, second_peak, second_peak_2, last_peak, last_peak_2, end_time, _max_peak, _min_peak = \
                             None, None, None, None, None, None, None, None, None, 2.5, 2.5

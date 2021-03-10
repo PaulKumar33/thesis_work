@@ -145,6 +145,12 @@ class system_main:
         while(True):
             #for the sample rate
             time.sleep(0.035)
+            
+            if(len(self.csvData[0]) > 1000):
+                self.csvData[0] = self.csvData[0][-64:]
+                self.csvData[1] = self.csvData[1][-64:]
+                self.csvData[2] = self.csvData[2][-64:]
+                print('truncating')
 
             if(FLAGS["HW_FLAG"]):
                 #need to check if we recorded the wash
@@ -161,7 +167,7 @@ class system_main:
                 #we want to continue onto the next iteration. Also stop tracking for a few seconds and refresh the buffers
                 continue
 
-            if(time.time() - self.STOP_TIME > 4.5 and self.DATA_STOP == True):
+            if(time.time() - self.STOP_TIME > 6.5 and self.DATA_STOP == True):
                 print("recordin starting again")
                 self.DATA_STOP = False
 
@@ -343,12 +349,12 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (len(self.csvData[0]) >= sample_points):
+            if (time.time() - tik > 30*60):
                 tok = time.time()
                 break
 
         print(f"elapsed time {tok - tik}")
-        print(f"sample rate: {len(self.csvData[1]) / (tok - tik)}\n")
+        #print(f"sample rate: {len(self.csvData[1]) / (tok - tik)}\n")
         
         
         print(f"total HW events: {self.HW_EVENT}")
@@ -360,7 +366,7 @@ class system_main:
             for row in self.csv_write:
                 writer.writerow(row)
         
-        with open("recorded_data.csv", "a") as fl:
+        '''with open("recorded_data.csv", "a") as fl:
             writer = csv.writer(fl)
             for row in self.csvData:
                 writer.writerow(row)
@@ -401,7 +407,7 @@ class system_main:
         axs[3].set_xlabel("time [s]")
         axs[3].set_ylabel("Voltage [V]")
         plt.grid(True)
-        plt.show()
+        plt.show()'''
 
     def directionIndication(self, max_class, DIRECTION_FLAG):
         '''
@@ -733,6 +739,6 @@ if __name__=="__main__":
     HW_FLAG = False
     HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
-    HW_system.runCollection(5000)
+    HW_system.runCollection(600)
     
     
