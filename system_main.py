@@ -280,7 +280,16 @@ class system_main:
                                 interval = self.peak_points[3] - self.peak_points[2]
 
 
-                            if (interval > 1.25 and time.time() - self.LAST_HW_TIME >= self.HW_DELAY_TIME and self.LAST_HW_TIME != -1):
+                            if (interval > 1.25 ):
+                                if(self.LAST_HW_TIME != -1 and time.time() - self.LAST_HW_TIME > self.HW_DELAY_TIME):
+                                    """
+                                    ###########################################################################
+                                    #CHECK IF THE TIME HAS PASSED. IF THIS IS THE FIRST EVENT IT WILL NOT SKIP#
+                                    ###########################################################################
+                                    """
+                                    continue
+
+                                
                                 '''
                                 ##########################
                                 #BEGIN THE CLASSIFICATION#
