@@ -39,6 +39,7 @@ class system_main:
         self.csvData = [[],[],[]]
         
         self.RECORD_FLAG = False
+        self.RECENT_HW_FLAG = False
         self.HW_EVENT = 0
         self.HW_COUNT = 0
         self.wait_time = wait_time
@@ -137,8 +138,35 @@ class system_main:
         self._min_peak = 2.5
         self._max_peak = 2.5
 
-        self.DATA_STOP = False
-        self.STOP_TIME = 0
+        self.DATA_STOP = False                          #RAISED WHEN THE DATA STOP EVENT OCCURS
+        self.LAST_DIRECTION = False                     #RAISED AT ANY DIRECTION EVENT
+        self.STOP_TIME = 0                              #ACCUMULATES FOR WHEN THE STOP EVENT IS RAISED
+        self.LAST_TRIGGER_TIME = None                   #TRACKS THE TIME OF THE LAST CLASSIFICATION
+        self.LAST_HW_TIME = -1                          #TRACKS THE TIME OF THE LAST HW
+        self.HW_DELAY_TIME = 2.5*60                     #HW DELAY TIME DEFAULT
+
+        '''
+        
+        THE LAST DIRECTION FLAG SHOULD BE FALSE IF ITS NOT THE HW DIRECTION
+        
+        '''
+
+
+        '''
+        
+        A FEW NOTES ON THE FLOW:
+        
+        1) IF A HW EVENT IS CLASSIFIED, WE SET THE STOP TIME TO A DEFAULT AMOUNT OF TIME - USUALLY DEFAULTS 5 MIN
+        
+        2) IF THERE IS A RETURN EVENT (IE GIVEN LEFT IS HW, A NO-LEFT OR RIGHT OCCURS AND THEN WITH 5 MIN A LEFT OCCURS), 
+        DO NOT CLASSIFY THE EVENT AS A HW EVENT. IF A HW OCCURS, RECORD THE EVENT
+        
+        3) IF A TYPICAL EVENT OCCURS, RECORD THE EVENT
+        
+        4) IF A HW OCCURS, DISABLE THE TRACKING FOR 5 MIN OR THE DEFAULT TIME 
+        
+        '''
+
 
         counter = 5
         print("start")
@@ -147,49 +175,29 @@ class system_main:
             time.sleep(0.035)
 
             if(FLAGS["HW_FLAG"]):
-                #need to check if we recorded the wash
-                #set the flag low after its completed
-                self.HW_COUNT += 1
+
+                self.LAST_HW_TIME = time.time()
+
+                self.HW_COUNT += 1                                      #need to check if we recorded the wash. Set the flag low after its completed
                 self.HW_EVENT += 1
                 FLAGS["HW_FLAG"] = False
 
-                #set the stop collection flag
-                self.DATA_STOP = True
+                self.DATA_STOP = True                                   #set the stop collection flag
                 self.STOP_TIME = time.time()
                 print(f"Event recorded: {t}")
-
-                #we want to continue onto the next iteration. Also stop tracking for a few seconds and refresh the buffers
                 continue
 
             if(time.time() - self.STOP_TIME > 4.5 and self.DATA_STOP == True):
                 print("recordin starting again")
                 self.DATA_STOP = False
 
-
-            # implement the moving average filter - before the buffer fills
-            #if (len(self.csvData[1]) < self.filter_length):
             if (True):
-                t = time.time() - tik
+                t = time.time() - tik                                   #implement the moving average filter - before the buffer fills. if (len(self.csvData[1]) < self.filter_length):
                 self.csvData[0].append(t)
                 self.csvData[1].append(float(self.mcp.read_IO(0) / 65355 * 5))
                 self.csvData[2].append(float(self.mcp.read_IO(1) / 65355 * 5))
 
             #after the buffer fills
-            else:
-                data = float(self.mcp.read_IO(0) / 65355 * 5)/(self.filter_length)
-                data1 = float(self.mcp.read_IO(1) / 65355 * 5)/(self.filter_length)
-                # print("DATA: {}".format(data/65355*5.2))
-                # data = struct.unpack('f', self.rawData)[0]/self.filter_length
-
-                #implement the filter
-                for i in range(self.filter_length - 1):
-                    data += self.csvData[1][-(i + 1)]/(self.filter_length)
-                    data1 += self.csvData[2][-(i + 1)]/(self.filter_length)
-                t = time.time() - tik
-                self.csvData[0].append(t)
-                self.csvData[1].append(data)
-                self.csvData[2].append(data1)
-
             #now lets check the data
             #implement moving variance
             if (len(data_buffer) < self.buffer_length):
@@ -206,7 +214,6 @@ class system_main:
 
                 #moving variance
                 for k in range(1, len(data_buffer)):
-
                     #variance
                     var_mean_1 = var_mean + (1 / self.buffer_length) * (data_buffer[k] - var_mean)
                     var_mean_21 = var_mean_2 + (1 / self.buffer_length) * (data_buffer_2[k] - var_mean_2)
@@ -226,11 +233,28 @@ class system_main:
 
                 variance_pt.append(Sk / self.buffer_length)
                 variance_time_pt.append(t)
+
+                '''
+                ##############################################################################
+                #BEGING THE TRACKING AT THIS POINT. WHEN VARIANCE EXCEEDS A CERTAIN THRESHOLD#
+                ##############################################################################
+                '''
+
+
                 if ((Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False) and
                         (Sk_2/self.buffer_length < self.var_limit and self.DATA_STOP == False)):
+
+
                     #if data stop high, we do not care about the direction classification, we record the HW event
                     counter += 1
                     if (counter >= self.low_delay):
+
+                        '''
+                        ###########################################
+                        #NO MORE SIGINIFICANT MOVEMENT IS DETECTED#
+                        ###########################################
+                        '''
+
                         _event = False
                         #counter = 0
                         self.gpioLOW(16)
@@ -238,12 +262,24 @@ class system_main:
 
                         if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None or
                             (self.peak_points[2] != None and self.peak_points[3] != None)):
+
+                            '''
+                            #####################################
+                            #CHECK IF THE WINDOW IS LARGE ENOGUH#
+                            #####################################
+                            '''
                             if(self.stop_index != None and self.start_index != None):
                                 interval = self.stop_index - self.start_index
                             elif(self.peak_points[2] != None and self.peak_points[3] != None):
                                 interval = self.peak_points[3] - self.peak_points[2]
-                            if (interval > 1.25):
 
+
+                            if (interval > 1.25 and time.time() - self.LAST_HW_TIME >= self.HW_DELAY_TIME and self.LAST_HW_TIME != -1):
+                                '''
+                                ##########################
+                                #BEGIN THE CLASSIFICATION#
+                                ##########################
+                                '''
                                 #compute the classification
                                 try:
                                     self.printPeaksTest()
@@ -297,13 +333,7 @@ class system_main:
                                     if (_classify[_class_] > max_guess):
                                         max_class, max_guess = _class_, _classify[_class_]
                                 print("Predicted: {}".format(max_class))
-                                
-                                if(self.peak_points[1]-self.peak_points[0] >=
-                                     self.peak_points[3]-self.peak_points[2] + 0.5 or self.peak_points[1]-self.peak_points[0] + 0.5 <=
-                                     self.peak_points[3]-self.peak_points[2]):
-                                    peak_differential_time = 1
-                                else:
-                                    peak_differential_time = 0
+
                                     
                                 self.directionIndication(max_class, DIRECTION_FLAG)
                                 self.csv_write.append(
@@ -336,10 +366,12 @@ class system_main:
 
                     if(self.peak_method == "peak_detection"):
                         self.runPeakDetection(t)
+
                 elif(self.DATA_STOP == True):
                     self.gpioLOW(16)
                     trig_tracker.append(0)
                     Sk = 0
+                    Sk_2 = 0
 
                 trig_time.append(t)
 
@@ -410,14 +442,27 @@ class system_main:
         '''
         if (max_class == 'right' and DIRECTION_FLAG == 0):
             self.gpioLOW(16)
+            self.LAST_DIRECTION = False
+            self.LAST_TRIGGER_TIME = time.time()
         elif (max_class == 'right' and DIRECTION_FLAG == 1):
-            self.HW_EVENT += 1
-            self.gpioHIGH(16)
+            if (self.LAST_DIRECTION == 0 and time.time() - self.LAST_TRIGGER_TIME > 5 * 60):
+                self.HW_EVENT += 1
+                self.gpioHIGH(16)
+
+            self.LAST_DIRECTION = True
+            self.LAST_TRIGGER_TIME = time.time()
         elif (max_class == 'left' and DIRECTION_FLAG == 0):
-            self.gpioHIGH(16)
-            self.HW_EVENT += 1
+            if(self.LAST_DIRECTION == 0 and time.time() - self.LAST_TRIGGER_TIME > 5*60):
+                self.HW_EVENT += 1
+                self.gpioHIGH(16)
+
+
+            self.LAST_DIRECTION = True
+            self.LAST_TRIGGER_TIME = time.time()
         elif (max_class == 'left' and DIRECTION_FLAG == 1):
             self.gpioLOW(16)
+            self.LAST_DIRECTION = False
+            self.LAST_TRIGGER_TIME = time.time()
 
 
     def runPeakDetection(self, t):
