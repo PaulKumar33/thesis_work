@@ -390,7 +390,7 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (time.time() - tik > 30*60):
+            if (time.time() - tik > 1.5*60*60):
                 tok = time.time()
                 break
 
