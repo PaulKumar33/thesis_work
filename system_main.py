@@ -181,11 +181,14 @@ class system_main:
                 print('truncating')
 
             if(FLAGS["HW_FLAG"]):
+                if(self.LAST_TRIGGER_TIME < 5*60 and self.LAST_DIRECTION == 1):
+                    self.HW_COUNT += 1
+                else:
+                    self.HW_COUNT += 1  # need to check if we recorded the wash. Set the flag low after its completed
+                    self.HW_EVENT += 1
 
                 self.LAST_HW_TIME = time.time()
 
-                self.HW_COUNT += 1                                      #need to check if we recorded the wash. Set the flag low after its completed
-                self.HW_EVENT += 1
                 FLAGS["HW_FLAG"] = False
 
                 self.DATA_STOP = True                                   #set the stop collection flag
