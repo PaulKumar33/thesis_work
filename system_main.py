@@ -418,6 +418,12 @@ class system_main:
 
         DIRECTION_FLAG - 0 IF LEFT 1 IF RIGHT
         '''
+        if(max_class != 'right' and max_class != "left"):
+            #if it is a no cross event
+            self.gpioLOW(16)
+            self.LAST_DIRECTION = 0
+            return
+
         if (max_class != 'right' and DIRECTION_FLAG == 0):
             self.gpioLOW(16)
             self.LAST_DIRECTION = 0
@@ -435,7 +441,10 @@ class system_main:
 
             self.LAST_DIRECTION = 1
             self.LAST_TRIGGER_TIME = time.time()
-        elif (max_class == 'left' and DIRECTION_FLAG == 0):
+            return
+
+
+        if (max_class == 'left' and DIRECTION_FLAG == 0):
             if(time.time() - self.LAST_TRIGGER_TIME > 5*60):
                 self.HW_EVENT += 1
                 self.gpioHIGH(16)
@@ -443,6 +452,8 @@ class system_main:
 
             self.LAST_DIRECTION = 1
             self.LAST_TRIGGER_TIME = time.time()
+            return
+        
         elif (max_class != 'left' and DIRECTION_FLAG == 1):
             self.gpioLOW(16)
             self.LAST_DIRECTION = 0
