@@ -141,7 +141,7 @@ class system_main:
         self.DATA_STOP = False                          #RAISED WHEN THE DATA STOP EVENT OCCURS
         self.LAST_DIRECTION = False                     #RAISED AT ANY DIRECTION EVENT
         self.STOP_TIME = 0                              #ACCUMULATES FOR WHEN THE STOP EVENT IS RAISED
-        self.LAST_TRIGGER_TIME = None                   #TRACKS THE TIME OF THE LAST CLASSIFICATION
+        self.LAST_TRIGGER_TIME = -1                     #TRACKS THE TIME OF THE LAST CLASSIFICATION
         self.LAST_HW_TIME = -1                          #TRACKS THE TIME OF THE LAST HW
         self.HW_DELAY_TIME = 2.5*60                     #HW DELAY TIME DEFAULT
 
@@ -406,77 +406,43 @@ class system_main:
             writer = csv.writer(fd)
             for row in self.csv_write:
                 writer.writerow(row)
-        
-        '''with open("recorded_data.csv", "a") as fl:
-            writer = csv.writer(fl)
-            for row in self.csvData:
-                writer.writerow(row)
-        self.gpioLOW(16)
 
-        fig, axs = plt.subplots(4)
-
-        fig.suptitle("Recorded data")
-        # print(len(trig_tracker), len(trig_time))
-        print(len(self.csvData[0]), len(self.csvData[1]))
-        axs[0].scatter(self.csvData[0], self.csvData[1])
-        if (self.peak_method == 'peak_detection'):
-            axs[0].scatter(self.max_time, self.max_points)
-            axs[0].scatter(self.min_time, self.min_points)
-        axs[0].axhline(y=self.lower, c='red')
-        axs[0].axhline(y=self.upper, c='red')
-        axs[0].set_xlim(self.csvData[0][0], self.csvData[0][-1])
-        axs[0].set_xlabel("time [s]")
-        axs[0].set_ylabel("Voltage [V]")
-        plt.grid(True)
-        axs[1].scatter(self.csvData[0], self.csvData[2])
-        axs[1].scatter(self.max_time_2, self.max_points_2)
-        axs[1].scatter(self.min_time_2, self.min_points_2)
-        # axs[1].axhline(y=0, c='red')
-        axs[1].set_xlim(self.csvData[0][0], self.csvData[0][-1])
-        axs[1].set_xlabel("time [s]")
-        axs[1].set_ylabel("dV/dt [V]")
-        plt.grid(True)
-
-        axs[2].plot(trig_time, trig_tracker)
-        axs[2].set_xlim(self.csvData[0][0], self.csvData[0][-1])
-        axs[2].set_xlabel("time [s]")
-        axs[2].set_ylabel("Voltage [V]")
-        plt.grid(True)
-
-        axs[3].scatter(variance_time_pt, variance_pt)
-        axs[3].set_xlim(self.csvData[0][0], self.csvData[0][-1])
-        axs[3].set_xlabel("time [s]")
-        axs[3].set_ylabel("Voltage [V]")
-        plt.grid(True)
-        plt.show()'''
 
     def directionIndication(self, max_class, DIRECTION_FLAG):
         '''
-        left  - 0
-        right - 1
+        positive direction = 1
+        negative direction = 0
+
+        DIRECTION_FLAG - 0 IF LEFT 1 IF RIGHT
         '''
-        if (max_class == 'right' and DIRECTION_FLAG == 0):
+        if (max_class != 'right' and DIRECTION_FLAG == 0):
             self.gpioLOW(16)
-            self.LAST_DIRECTION = False
+            self.LAST_DIRECTION = 0
             self.LAST_TRIGGER_TIME = time.time()
         elif (max_class == 'right' and DIRECTION_FLAG == 1):
-            if (self.LAST_DIRECTION == 0 and time.time() - self.LAST_TRIGGER_TIME > 5 * 60):
+            #TRIGGER THE EVENT IF A RECENT LEAVE HASNT OCCURRED# ----> LAST_DIRECTION == 0 IS NEGATIVE DIRECTION
+            if (time.time() - self.LAST_TRIGGER_TIME > 5 * 60):
+                #IF LAST WAS LEFT AND COME BACK WITHIN 5
                 self.HW_EVENT += 1
                 self.gpioHIGH(16)
+                self.LAST_DIRECTION = 1
+            elif(self.LAST_DIRECTION == 0):
+                self.gpioHIGH(16)
+                self.LAST_DIRECTION = 1
 
-            self.LAST_DIRECTION = True
+            self.LAST_DIRECTION = 1
             self.LAST_TRIGGER_TIME = time.time()
         elif (max_class == 'left' and DIRECTION_FLAG == 0):
-            if(self.LAST_DIRECTION == 0 and time.time() - self.LAST_TRIGGER_TIME > 5*60):
+            if(time.time() - self.LAST_TRIGGER_TIME > 5*60):
                 self.HW_EVENT += 1
                 self.gpioHIGH(16)
+                self.LAST_DIRECTION = 1
 
-
-            self.LAST_DIRECTION = True
+            self.LAST_DIRECTION = 1
             self.LAST_TRIGGER_TIME = time.time()
-        elif (max_class == 'left' and DIRECTION_FLAG == 1):
+        elif (max_class != 'left' and DIRECTION_FLAG == 1):
             self.gpioLOW(16)
-            self.LAST_DIRECTION = False
+            self.LAST_DIRECTION = 0
             self.LAST_TRIGGER_TIME = time.time()
 
 
