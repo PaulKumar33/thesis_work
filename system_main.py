@@ -174,10 +174,10 @@ class system_main:
             #for the sample rate
             time.sleep(0.035)
             
-            if(len(self.csvData[0]) > 1000):
-                self.csvData[0] = self.csvData[0][-64:]
-                self.csvData[1] = self.csvData[1][-64:]
-                self.csvData[2] = self.csvData[2][-64:]
+            if(len(self.csvData[0]) > 2048):
+                self.csvData[0] = self.csvData[0][-128:]
+                self.csvData[1] = self.csvData[1][-128:]
+                self.csvData[2] = self.csvData[2][-128:]
                 print('truncating')
 
             if(FLAGS["HW_FLAG"]):
@@ -393,7 +393,7 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (time.time() - tik > 1.5*60*60):
+            if (time.time() - tik > 30*60):
                 tok = time.time()
                 break
 
@@ -422,19 +422,23 @@ class system_main:
             #if it is a no cross event
             self.gpioLOW(16)
             self.LAST_DIRECTION = 0
+            print("LAST_DIRECTION SET: {}".format(self.LAST_DIRECTION))
             return
 
-        if (max_class != 'right' and DIRECTION_FLAG == 0):
+        elif (max_class != 'left' and DIRECTION_FLAG == 0):
             self.gpioLOW(16)
             self.LAST_DIRECTION = 0
             self.LAST_TRIGGER_TIME = time.time()
+            print("Direction of no interest")
         elif (max_class == 'right' and DIRECTION_FLAG == 1):
             #TRIGGER THE EVENT IF A RECENT LEAVE HASNT OCCURRED# ----> LAST_DIRECTION == 0 IS NEGATIVE DIRECTION
-            if (time.time() - self.LAST_TRIGGER_TIME > 5 * 60):
+            if (time.time() - self.LAST_TRIGGER_TIME > self.HW_DELAY_TIME
+                or self.LAST_TRIGGER_TIME == -1):
                 #IF LAST WAS LEFT AND COME BACK WITHIN 5
                 self.HW_EVENT += 1
                 self.gpioHIGH(16)
                 self.LAST_DIRECTION = 1
+                print("Event captured")
             elif(self.LAST_DIRECTION == 0):
                 self.gpioHIGH(16)
                 self.LAST_DIRECTION = 1
@@ -444,20 +448,23 @@ class system_main:
             return
 
 
-        if (max_class == 'left' and DIRECTION_FLAG == 0):
-            if(time.time() - self.LAST_TRIGGER_TIME > 5*60):
+        elif (max_class == 'left' and DIRECTION_FLAG == 0):
+            if(time.time() - self.LAST_TRIGGER_TIME > self.HW_DELAY_TIME or
+               self.LAST_TRIGGER_TIME == -1):
                 self.HW_EVENT += 1
                 self.gpioHIGH(16)
                 self.LAST_DIRECTION = 1
+                print("Event capture")
 
             self.LAST_DIRECTION = 1
             self.LAST_TRIGGER_TIME = time.time()
             return
         
-        elif (max_class != 'left' and DIRECTION_FLAG == 1):
+        elif (max_class != 'right' and DIRECTION_FLAG == 1):
             self.gpioLOW(16)
             self.LAST_DIRECTION = 0
             self.LAST_TRIGGER_TIME = time.time()
+            print("Direction of no interest")
 
 
     def runPeakDetection(self, t):
