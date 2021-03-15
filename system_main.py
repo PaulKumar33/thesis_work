@@ -396,7 +396,7 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (time.time() - tik > 7.5*60):
+            if (time.time() - tik > 4*60):
                 tok = time.time()
                 break
 
