@@ -48,7 +48,7 @@ class system_main:
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         
-        GPIO.add_event_detect(24, GPIO.RISING, callback=softwareBtnInterrupt, bouncetime=300)
+        GPIO.add_event_detect(24, GPIO.RISING, callback=softwareBtnInterrupt, bouncetime=1500)
         GPIO.setup(16, GPIO.OUT)
 
         try:
@@ -89,7 +89,7 @@ class system_main:
         self.upper = self.thresh_holds[1]
         self.lower = self.thresh_holds[0]
 
-        self.var_limit = 0.00850
+        self.var_limit = 0.01
 
         tik = time.time()
 
@@ -193,7 +193,7 @@ class system_main:
 
                 self.DATA_STOP = True                                   #set the stop collection flag
                 self.STOP_TIME = time.time()
-                print(f"Event recorded: {t}")
+                print(f"Event recorded: ")
                 continue
 
             if(time.time() - self.STOP_TIME > 6.5 and self.DATA_STOP == True):
