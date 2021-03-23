@@ -312,9 +312,7 @@ class system_main:
                                         gradient_2 = 9999
 
                                     print("here me gradients: {0}, {1}".format(gradient, gradient_2))
-                                    gradient = 1 if gradient > 0 and gradient != 9999 else 0
-                                    gradient_2 = 1 if gradient_2 > 0 and gradient != 9999 else 0
-                                
+                                                                    
                                 except Exception as e:
                                     print(e)
 
@@ -396,7 +394,7 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (time.time() - tik > 2*60):
+            if (time.time() - tik > 4*60):
                 tok = time.time()
                 break
 
