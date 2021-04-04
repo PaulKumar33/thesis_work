@@ -191,16 +191,17 @@ class system_main:
             #for the sample rate
             time.sleep(0.035)
             if(int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track)>= 1):
-                with open('gw_tracking.csv', 'a') as fd:
+                with open('hw_tracking.csv', 'a') as fd:
                     # fd.write(self.csv_write)
                     print("writitng")
                     writer = csv.writer(fd)                    
-                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS])
+                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
                     self.curr_time_track = datetime.datetime.today().strftime("%M")
                 
             
-            if(datetime.datetime.today().strftime("%Y-%m-%d:%H-%M") == "2021-04-04:13-30"):
+            if(datetime.datetime.today().strftime("%Y-%m-%d:%H-%M") == "2021-04-04:15-30"):
                 self.CUE_FLAG = True
+                self.CURRENT_STATUS = "CUES"
             
             if(self.BUZZ_FLAG == False):
                 #print("setting low")
@@ -462,7 +463,7 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (time.time() - tik > 0.05*60*60):
+            if (time.time() - tik > 0.25*60*60):
                 tok = time.time()
                 break
 
