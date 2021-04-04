@@ -15,7 +15,7 @@ from decision_tree import impurity
 
 class serialCapture:
     def __init__(self, port, baudrate, timeout=4, data_name = None, low_delay=15,
-                 peak_method='slope', thresh_holds = [2.25, 2.75]):
+                 peak_method='slope', thresh_holds = [2.1, 2.9]):
         
         
 
@@ -67,7 +67,7 @@ class serialCapture:
         upper = self.thresh_holds[1]
         lower = self.thresh_holds[0]
 
-        var_limit = 0.00850
+        var_limit = 0.015
 
         tik = time.time()
         

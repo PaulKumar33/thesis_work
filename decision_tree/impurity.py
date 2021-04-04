@@ -8,7 +8,7 @@ import pandas as pd
 df = pd.read_excel("../decision_data_new.xlsx", "wall_binary_2")
 
 df_mat = df.values.tolist()"""
-df = pd.read_excel("../decision_data_new.xlsx", "sys2")
+df = pd.read_excel("./decision_data_new.xlsx", "sys2")
 
 df_mat = df.values.tolist()
 
