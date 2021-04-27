@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 df = pd.read_excel("../decision_data_new.xlsx", "wall_binary_2")
 
 df_mat = df.values.tolist()"""
-df = pd.read_excel("../decision_data_new.xlsx", "sys2_test")
+
+df = pd.read_excel("./decision_data_new.xlsx", "sys2")
 
 df_mat = df.values.tolist()
 

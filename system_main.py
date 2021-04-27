@@ -8,6 +8,7 @@ import scipy.stats
 import pandas as pd
 import os
 
+
 import mcp_3008_driver as mcp
 import RPi.GPIO as GPIO
 
@@ -16,7 +17,10 @@ from decision_tree import impurity
 
 
 def softwareBtnInterrupt(channel):
-        FLAGS["HW_FLAG"] = True
+    FLAGS["HW_FLAG"] = True
+        
+def softwareBuzzInteruppt():
+    FLAGS["BUZZ"] = True
 
 #HW_FLAG = False #this should be set to true during HW event
 FLAGS={
@@ -47,9 +51,12 @@ class system_main:
         #setu0p the GPIOs for interrupts
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        
         GPIO.add_event_detect(24, GPIO.RISING, callback=softwareBtnInterrupt, bouncetime=1500)
+        
         GPIO.setup(16, GPIO.OUT)
+        GPIO.setup(2, GPIO.OUT)
+        self.gpioLOW(2)
+        
 
         try:
             if (os.name == 'nt'):
@@ -66,7 +73,7 @@ class system_main:
             elif (os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data_new.xlsx", "sys2")
+                df = pd.read_excel("./decision_data_new.xlsx", "sys2_test")
                 # df = df.drop(columns=['figure'])
                 df_mat = df.values.tolist()
                 
@@ -89,7 +96,7 @@ class system_main:
         self.upper = self.thresh_holds[1]
         self.lower = self.thresh_holds[0]
 
-        self.var_limit = 0.01
+        self.var_limit = 0.02
 
         tik = time.time()
 
@@ -120,6 +127,7 @@ class system_main:
 
         _event = False
         window = []
+        _evt_time = 0
 
         self.first_peak = None
         self.last_peak = None
@@ -139,11 +147,18 @@ class system_main:
         self._max_peak = 2.5
 
         self.DATA_STOP = False                          #RAISED WHEN THE DATA STOP EVENT OCCURS
+        self.BUZZ_FLAG = False                          #RAISED WHEN THE BUZZER BEEPS
         self.LAST_DIRECTION = False                     #RAISED AT ANY DIRECTION EVENT
         self.STOP_TIME = 0                              #ACCUMULATES FOR WHEN THE STOP EVENT IS RAISED
         self.LAST_TRIGGER_TIME = -1                     #TRACKS THE TIME OF THE LAST CLASSIFICATION
         self.LAST_HW_TIME = -1                          #TRACKS THE TIME OF THE LAST HW
         self.HW_DELAY_TIME = 2.5*60                     #HW DELAY TIME DEFAULT
+        
+        self.CUE_FLAG = True
+        
+        self.CURRENT_STATUS = 'NO_CUE'
+        self.curr_time_track = datetime.datetime.today().strftime("%M")
+        
 
         '''
         
@@ -170,10 +185,33 @@ class system_main:
 
         counter = 5
         print("start")
+        cnt2 = 0
+        buzz_tik = 0
         while(True):
             #for the sample rate
             time.sleep(0.035)
+            if(int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track)>= 1):
+                with open('hw_tracking.csv', 'a') as fd:
+                    # fd.write(self.csv_write)
+                    print("writitng")
+                    writer = csv.writer(fd)                    
+                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                    self.curr_time_track = datetime.datetime.today().strftime("%M")
+                
             
+            if(datetime.datetime.today().strftime("%Y-%m-%d:%H-%M") == "2021-04-04:15-30"):
+                self.CUE_FLAG = True
+                self.CURRENT_STATUS = "CUES"
+            
+            if(self.BUZZ_FLAG == False):
+                #print("setting low")
+                self.gpioLOW(2)
+            
+            if(self.BUZZ_FLAG == True and time.time() - buzz_tik >= 0.25):
+                print("chimcken")
+                self.gpioLOW(2)
+                self.BUZZ_FLAG = False
+
             if(len(self.csvData[0]) > 2048):
                 self.csvData[0] = self.csvData[0][-128:]
                 self.csvData[1] = self.csvData[1][-128:]
@@ -181,7 +219,9 @@ class system_main:
                 print('truncating')
 
             if(FLAGS["HW_FLAG"]):
-                if(self.LAST_TRIGGER_TIME < 5*60 and self.LAST_DIRECTION == 1):
+                print("PRINTING FLAGS")
+                self.printFlags()
+                if(time.time() - self.LAST_TRIGGER_TIME < 5*60 and self.LAST_DIRECTION == 1):
                     self.HW_COUNT += 1
                 else:
                     self.HW_COUNT += 1  # need to check if we recorded the wash. Set the flag low after its completed
@@ -196,9 +236,14 @@ class system_main:
                 print(f"Event recorded: ")
                 continue
 
-            if(time.time() - self.STOP_TIME > 6.5 and self.DATA_STOP == True):
+            if(time.time() - self.STOP_TIME > 6.5 and self.DATA_STOP == True ):                
                 print("recordin starting again")
                 self.DATA_STOP = False
+                self.DATA_STOP = False
+                
+                print("FLAGS")
+                self.printFlags()
+                
 
             if (True):
                 t = time.time() - tik                                   #implement the moving average filter - before the buffer fills. if (len(self.csvData[1]) < self.filter_length):
@@ -252,7 +297,8 @@ class system_main:
 
                 if ((Sk / self.buffer_length < self.var_limit and self.DATA_STOP == False) and
                         (Sk_2/self.buffer_length < self.var_limit and self.DATA_STOP == False)):
-
+                    _evt_time = 0
+                                        
 
                     #if data stop high, we do not care about the direction classification, we record the HW event
                     counter += 1
@@ -263,12 +309,14 @@ class system_main:
                         #NO MORE SIGINIFICANT MOVEMENT IS DETECTED#
                         ###########################################
                         '''
-
+                        
                         _event = False
                         #counter = 0
                         self.gpioLOW(16)
                         trig_tracker.append(0)
-
+                        cond_test = self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None or \
+                            (self.peak_points[2] != None and self.peak_points[3] != None)
+                        
                         if (self.stop_index != None and self.start_index != None and self.first_peak != None and self.last_peak != None or
                             (self.peak_points[2] != None and self.peak_points[3] != None)):
 
@@ -282,9 +330,9 @@ class system_main:
                             elif(self.peak_points[2] != None and self.peak_points[3] != None):
                                 interval = self.peak_points[3] - self.peak_points[2]
 
-
+                            
                             if (interval > 1.25 ):
-                                if(self.LAST_HW_TIME != -1 and time.time() - self.LAST_HW_TIME > self.HW_DELAY_TIME):
+                                if(self.LAST_HW_TIME != -1 and time.time() - self.LAST_HW_TIME < self.HW_DELAY_TIME):
                                     """
                                     ###########################################################################
                                     #CHECK IF THE TIME HAS PASSED. IF THIS IS THE FIRST EVENT IT WILL NOT SKIP#
@@ -341,10 +389,12 @@ class system_main:
                                 last_peak_differential = 1 if self.peak_points[1] < self.peak_points[3] else 0
 
                                 print(type(temp[0]), type(temp[1]), type(temp[4]), type(temp[6]), type(gradient))
-                                _classify = impurity.classify([temp[0], temp[1], gradient, temp[2], temp[3],
-                                                               gradient_2, temp[4], temp[5], temp[6],
-                                                               temp[7],first_peak_differential,
-                                                               last_peak_differential], self.tree)
+                                #_classify = impurity.classify([temp[0], temp[1], gradient, temp[2], temp[3],
+                                #                               gradient_2, temp[4], temp[5], temp[6],
+                                #                               temp[7],first_peak_differential,
+                                #                               last_peak_differential], self.tree)
+                                #classify for the new datas
+                                _classify = impurity.classify([gradient, gradient_2, temp[4], first_peak_differential, last_peak_differential], self.tree)
                                 max_guess = 0
                                 max_class = None
 
@@ -364,11 +414,14 @@ class system_main:
                                 None, None, None, None, None, None, None, None, None, 2.5, 2.5
                             self.second_last_peak, self.second_last_peak_2 = None, None
                             self.peak_points = [None, None, None, None]
+                            
 
                     else:
-
                         trig_tracker.append(1)
-                        self.gpioHIGH(16)
+                        _evt_time = 0
+                        if(self.CUE_FLAG == True):
+                            self.gpioHIGH(16)
+                        
                         if (self.peak_method == 'peak_detection'):
                             # simple implementation of the peak detection algorithm
                             # find max
@@ -377,16 +430,32 @@ class system_main:
                 elif((Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False) or
                      (Sk_2/self.buffer_length > self.var_limit and self.DATA_STOP == False)):
                     #we have detected movement and no HW event yet
+                    if(Sk/self.buffer_length > self.var_limit and Sk_2/self.buffer_length > self.var_limit and
+                       self.second_peak != None and self.peak_points[0] != None and self.peak_points[2] != None):
+                        if(self.peak_points[0] < self.peak_points[2] and self.second_peak >= 2.5):
+                            if(self.BUZZ_FLAG == False and time.time() - buzz_tik >= 10 and self.CUE_FLAG and _evt_time >=10):
+                                self.gpioHIGH(2)
+                                self.BUZZ_FLAG = True
+                                buzz_tik = time.time()
+                    elif(self.BUZZ_FLAG == True and time.time() - buzz_tik >= 0.25):
+                        self.gpioLOW(2)
+                        
                     _event = True
-                    self.gpioHIGH(16)
+                    if(self.CUE_FLAG == True):
+                        self.gpioHIGH(16)
                     window.append(t)
                     trig_tracker.append(1)
                     counter = 0
+                    _evt_time += 1
 
                     if(self.peak_method == "peak_detection"):
                         self.runPeakDetection(t)
 
                 elif(self.DATA_STOP == True):
+                    self.BUZZ_FLAG = False
+                    self.gpioLOW(2)
+                    _evt_time = 0
+                    print("CONDITION 3")
                     self.gpioLOW(16)
                     trig_tracker.append(0)
                     Sk = 0
@@ -394,7 +463,7 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (time.time() - tik > 4*60):
+            if (time.time() - tik > 0.25*60*60):
                 tok = time.time()
                 break
 
@@ -410,6 +479,13 @@ class system_main:
             writer = csv.writer(fd)
             for row in self.csv_write:
                 writer.writerow(row)
+                
+                
+                
+    def printFlags(self):
+        print(self.DATA_STOP, self.LAST_DIRECTION,
+        self.STOP_TIME, self.LAST_TRIGGER_TIME,
+        self.LAST_HW_TIME, self.HW_DELAY_TIME)
 
 
     def directionIndication(self, max_class, DIRECTION_FLAG):
@@ -437,11 +513,13 @@ class system_main:
                 or self.LAST_TRIGGER_TIME == -1):
                 #IF LAST WAS LEFT AND COME BACK WITHIN 5
                 self.HW_EVENT += 1
-                self.gpioHIGH(16)
+                if(self.CUE_FLAG == True):
+                    self.gpioHIGH(16)
                 self.LAST_DIRECTION = 1
                 print("Event captured")
             elif(self.LAST_DIRECTION == 0):
-                self.gpioHIGH(16)
+                if(self.CUE_FLAG == True):
+                    self.gpioHIGH(16)
                 self.LAST_DIRECTION = 1
 
             self.LAST_DIRECTION = 1
@@ -453,7 +531,8 @@ class system_main:
             if(time.time() - self.LAST_TRIGGER_TIME > self.HW_DELAY_TIME or
                self.LAST_TRIGGER_TIME == -1):
                 self.HW_EVENT += 1
-                self.gpioHIGH(16)
+                if(self.CUE_FLAG == True):
+                    self.gpioHIGH(16)
                 self.LAST_DIRECTION = 1
                 print("Event capture")
 
@@ -779,7 +858,7 @@ class system_main:
 
 if __name__=="__main__":
     HW_FLAG = False
-    HW_system = system_main(15, 3, window_thresholds=[2.10,2.90])
+    HW_system = system_main(20, 3, window_thresholds=[2.10,2.90])
     #HW_system.testBtnInterrupt()
     HW_system.runCollection(600)
     
