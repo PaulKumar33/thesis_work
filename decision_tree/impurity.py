@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 
+import random
+import matplotlib.pyplot as plt
+
 
 
 """df = pd.read_excel("./decision_data_new.xlsx", "wall_binary")
@@ -8,7 +11,7 @@ import pandas as pd
 df = pd.read_excel("../decision_data_new.xlsx", "wall_binary_2")
 
 df_mat = df.values.tolist()"""
-df = pd.read_excel("../decision_data_new.xlsx", "sys2")
+df = pd.read_excel("../decision_data_new.xlsx", "sys2_test")
 
 df_mat = df.values.tolist()
 
@@ -257,9 +260,75 @@ def return_model(model):
     print_tree(model)
     return model
 
-tree = build_tree(df_mat)
-print_tree(tree)
-"""_classify = classify([2.192382813,	2.8125,	0.099384282,	2.490029405,	1.213396868,	'no-cross-left'], tree)
+def split_data(df, test_size):
+    temp_df = df
+    df_cols = df.columns.tolist()
+    test_df = pd.DataFrame([], columns=df_cols)
+
+    for i in range(test_size):
+        r = random.randint(0, len(temp_df.iloc[:, 0]) - 1)
+        try:
+            test_df.loc[len(test_df)] = temp_df.iloc[r, :]
+
+            temp_df = temp_df.drop(r)
+            temp_df.reset_index(drop=True, inplace=True)
+        except:
+            print(r)
+            print(len(temp_df.iloc[:, 0]))
+
+    return temp_df, test_df
+
+
+
+file = "../decision_data_new.xlsx"
+data = pd.DataFrame(pd.read_excel(file, "sys2_test2"))
+
+#can select according to a list of headings
+#df = data[["first_peak","second_peak","second_last_peak", "last_peak", "first_peak_2",	"second_peak_2", "second_last_peak_2", "last_peak_2",
+#           "Gradient_1", "Gradient_2","first_peak_differential","last_peak_differential", "direction"]]
+df = data[["1-hot_second","first_peak_differential","last_peak_differential", "direction"]]
+df.reset_index(drop=True, inplace=True)
+
+
+N = 201
+iters = 10
+datas = []
+for _iter in range(0,iters):
+    accuracy, tot = 0.0, 0.0
+    pts = []
+    for _iter_ in range(1, N):
+        if (_iter_ % 10 == 0):
+            print(f"{_iter_/(N-1) *100}% Complete")
+        train, test = split_data(df, 20)
+        tree = build_tree(train.values.tolist())
+        for index in range(len(test.iloc[:, 0])):
+            _classify = classify(test.iloc[index, 0:-1].tolist(), tree)
+            max_guess = 0
+            max_class = None
+            actual = test.iloc[index, :][-1]
+
+            for _class_ in _classify:
+                if (_classify[_class_] > max_guess):
+                    max_class, max_guess = _class_, _classify[_class_]
+            if (max_class == actual):
+                accuracy += 1
+            tot += 1
+
+        pts.append(accuracy/tot * 100)
+
+    datas.append(pts)
+
+print(f"ACCURACY: {accuracy/tot}")
+x_pts = range(1, N)
+for _iter in range(0,iters):
+    plt.scatter(x_pts, datas[_iter])
+
+plt.title("Test Accuracy")
+plt.xlabel("iteration")
+plt.ylabel("accuracy [%]")
+plt.show()
+
+'''_classify = classify([-0.13614339366506512, 1.0,	0.0,	0.0], tree)
 
 max_guess = 0
 max_class = None
@@ -267,6 +336,6 @@ for _class_ in _classify:
     if(_classify[_class_]>max_guess):
         max_class, max_guess = _class_, _classify[_class_]
 
-print(f"Predicted: {max_class}")"""
+print(f"Predicted: {max_class}")'''
 
 

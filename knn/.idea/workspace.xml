@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d4e72149-b43b-40b7-bd88-3bcb3438602a" name="Default Changelist" comment="" />
+    <list default="true" id="d4e72149-b43b-40b7-bd88-3bcb3438602a" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../decision_data_new.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/../decision_data_new.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../decision_tree/impurity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../decision_tree/impurity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/knn_learn.py" beforeDir="false" afterPath="$PROJECT_DIR$/knn_learn.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -14,13 +19,11 @@
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-1928" />
-    <option name="y" value="-6" />
-    <option name="width" value="974" />
-    <option name="height" value="1047" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
   <component name="ProjectId" id="1jnVD7gGD4VgRdg3qHI1rHuxvUx" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showExcludedFiles" value="true" />
@@ -30,7 +33,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.findPeaks">
+  <component name="RunManager" selected="Python.knn_learn">
     <configuration name="excelDataParse" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="knn" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -96,9 +99,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.knn_learn" />
         <item itemvalue="Python.findPeaks" />
         <item itemvalue="Python.excelDataParse" />
-        <item itemvalue="Python.knn_learn" />
       </list>
     </recent_temporary>
   </component>
@@ -128,33 +131,29 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="679" y="117" key="#findPeaks" timestamp="1605744532144">
+    <state width="1003" height="157" key="GridCell.Tab.0.bottom" timestamp="1618803272991">
+      <screen x="-1024" y="0" width="1024" height="728" />
+    </state>
+    <state width="1003" height="157" key="GridCell.Tab.0.bottom/0.0.1920.1040/-1024.0.1024.728@-1024.0.1024.728" timestamp="1618803272991" />
+    <state width="1003" height="157" key="GridCell.Tab.0.center" timestamp="1618803272990">
+      <screen x="-1024" y="0" width="1024" height="728" />
+    </state>
+    <state width="1003" height="157" key="GridCell.Tab.0.center/0.0.1920.1040/-1024.0.1024.728@-1024.0.1024.728" timestamp="1618803272990" />
+    <state width="1003" height="157" key="GridCell.Tab.0.left" timestamp="1618803272989">
+      <screen x="-1024" y="0" width="1024" height="728" />
+    </state>
+    <state width="1003" height="157" key="GridCell.Tab.0.left/0.0.1920.1040/-1024.0.1024.728@-1024.0.1024.728" timestamp="1618803272989" />
+    <state width="1003" height="157" key="GridCell.Tab.0.right" timestamp="1618803272990">
+      <screen x="-1024" y="0" width="1024" height="728" />
+    </state>
+    <state width="1003" height="157" key="GridCell.Tab.0.right/0.0.1920.1040/-1024.0.1024.728@-1024.0.1024.728" timestamp="1618803272990" />
+    <state x="922" y="162" key="SettingsEditor" timestamp="1618803204063">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="679" y="117" key="#findPeaks/0.0.1920.1040@0.0.1920.1040" timestamp="1605744532144" />
-    <state width="938" height="252" key="GridCell.Tab.0.bottom" timestamp="1605834311056">
+    <state x="922" y="162" key="SettingsEditor/0.0.1920.1040/-1024.0.1024.728@0.0.1920.1040" timestamp="1618803204063" />
+    <state x="1136" y="343" key="com.intellij.ide.util.TipDialog" timestamp="1618803190043">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="938" height="252" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1605834311056" />
-    <state width="938" height="252" key="GridCell.Tab.0.center" timestamp="1605834311056">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="938" height="252" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1605834311056" />
-    <state width="938" height="252" key="GridCell.Tab.0.left" timestamp="1605834311056">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="938" height="252" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1605834311056" />
-    <state width="938" height="252" key="GridCell.Tab.0.right" timestamp="1605834311056">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state width="938" height="252" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1605834311056" />
-    <state x="461" y="145" key="SettingsEditor" timestamp="1605744551245">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="461" y="145" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1605744551245" />
-    <state x="656" y="327" key="com.intellij.ide.util.TipDialog" timestamp="1604439722918">
-      <screen x="0" y="0" width="1920" height="1040" />
-    </state>
-    <state x="656" y="327" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1604439722918" />
+    <state x="1136" y="343" key="com.intellij.ide.util.TipDialog/0.0.1920.1040/-1024.0.1024.728@0.0.1920.1040" timestamp="1618803190043" />
   </component>
 </project>
