@@ -4,7 +4,7 @@ import struct
 import time
 import statistics
 import csv
-import scipy.stats
+#import scipy.stats
 import pandas as pd
 import os
 
@@ -29,7 +29,7 @@ FLAGS={
 class system_main:   
     
     def __init__(self, low_delay, wait_time, peak_method="peak_detection", window_thresholds=[2.25, 2.75],
-               variance_threshold=0.085):
+               variance_threshold=0.095):
 
         self.filter_length = 3
         self.buffer_length = 16 #length of the variance data buffer
@@ -96,7 +96,7 @@ class system_main:
         self.upper = self.thresh_holds[1]
         self.lower = self.thresh_holds[0]
 
-        self.var_limit = 0.02
+        self.var_limit = 0.025
 
         tik = time.time()
 

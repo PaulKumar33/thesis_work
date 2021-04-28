@@ -281,7 +281,7 @@ def split_data(df, test_size):
 
 
 
-file = "../decision_data_new.xlsx"
+'''file = "../decision_data_new.xlsx"
 data = pd.DataFrame(pd.read_excel(file, "sys2_test2"))
 
 #can select according to a list of headings
@@ -329,6 +329,7 @@ plt.xlabel("iteration")
 plt.ylabel("accuracy [%]")
 plt.show()
 
+'''
 '''_classify = classify([-0.13614339366506512, 1.0,	0.0,	0.0], tree)
 
 max_guess = 0

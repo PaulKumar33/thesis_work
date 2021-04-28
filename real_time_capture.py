@@ -4,7 +4,7 @@ import struct
 import time
 import statistics
 import csv
-import scipy.stats
+#import scipy.stats
 import pandas as pd
 import os
 
@@ -67,7 +67,7 @@ class serialCapture:
         upper = self.thresh_holds[1]
         lower = self.thresh_holds[0]
 
-        var_limit = 0.015
+        var_limit = 0.025
 
         tik = time.time()
         
@@ -130,7 +130,7 @@ class serialCapture:
         counter = 5
         print("start")
         while(True):
-            time.sleep(0.035)
+            time.sleep(0.025)
             if(os.name == "nt"):
                 self.handle.readinto(self.rawData)
             #else:
@@ -287,11 +287,11 @@ class serialCapture:
                                 e_index = self.csvData[0].index(stop_index)
 
                                 _mean = statistics.mean(self.csvData[1])
-                                variance = statistics.variance(self.csvData[1])
-                                skewness = scipy.stats.skew(self.csvData[1])
+                                #variance = statistics.variance(self.csvData[1])
+                                #skewness = scipy.stats.skew(self.csvData[1])
                                 
-                                variance_2 = statistics.variance(self.csvData[2])
-                                skewness_2 = scipy.stats.skew(self.csvData[2])
+                                #variance_2 = statistics.variance(self.csvData[2])
+                                #skewness_2 = scipy.stats.skew(self.csvData[2])
 
                                 print("#########################Getting features#######################################")
                                 print("")
