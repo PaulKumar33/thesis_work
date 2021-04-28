@@ -12,7 +12,7 @@ df = pd.read_excel("../decision_data_new.xlsx", "wall_binary_2")
 
 df_mat = df.values.tolist()"""
 
-df = pd.read_excel("./decision_data_new.xlsx", "sys2")
+df = pd.read_excel("./decision_data_new.xlsx", "sys_mini2")
 
 df_mat = df.values.tolist()
 
@@ -279,7 +279,8 @@ def split_data(df, test_size):
 
     return temp_df, test_df
 
-
+tree = build_tree(df_mat)
+print_tree(tree)
 
 '''file = "../decision_data_new.xlsx"
 data = pd.DataFrame(pd.read_excel(file, "sys2_test2"))
