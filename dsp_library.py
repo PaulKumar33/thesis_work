@@ -42,8 +42,9 @@ class DSP(object):
 
         #now for the remaining data pts
         for i in range(order-1, len(data_in)):
-            temp = sum(data_in[i:i+order])
-            ma_calc.append(temp/len(data_in[i:i+order]))
+            print(i-order, i)
+            temp = sum(data_in[i-order+1:i+1])
+            ma_calc.append(temp/order)
 
         return ma_calc
 
