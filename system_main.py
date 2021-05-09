@@ -396,12 +396,12 @@ class system_main:
                                 last_peak_differential = 1 if self.peak_points[1] < self.peak_points[3] else 0
 
                                 print(type(temp[0]), type(temp[1]), type(temp[4]), type(temp[6]), type(gradient))
-                                _classify = impurity.classify([temp[0], temp[1], gradient, temp[2], temp[3],
-                                                               gradient_2, temp[4], temp[5], temp[6],
-                                                               temp[7],first_peak_differential,
-                                                               last_peak_differential], self.tree)
+                                #_classify = impurity.classify([temp[0], temp[1], gradient, temp[2], temp[3],
+                                #                               gradient_2, temp[4], temp[5], temp[6],
+                                #                               temp[7],first_peak_differential,
+                                #                               last_peak_differential], self.tree)
                                 #classify for the new datas
-                                #_classify = impurity.classify([gradient, gradient_2, temp[4], first_peak_differential, last_peak_differential], self.tree)
+                                _classify = impurity.classify([gradient, gradient_2, first_peak_differential, last_peak_differential], self.tree)
                                 max_guess = 0
                                 max_class = None
 
