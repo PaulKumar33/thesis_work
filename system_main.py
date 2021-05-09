@@ -80,7 +80,7 @@ class system_main:
             elif (os.name == 'posix'):
                 print("connecting to ADC")
                 self.mcp = mcp.mcp_external()
-                df = pd.read_excel("./decision_data_new.xlsx", "sys_mini2")
+                df = pd.read_excel("./decision_data_new.xlsx", "sys_wall")
                 # df = df.drop(columns=['figure'])
                 df_mat = df.values.tolist()
                 
