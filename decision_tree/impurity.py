@@ -12,7 +12,7 @@ df = pd.read_excel("../decision_data_new.xlsx", "wall_binary_2")
 
 df_mat = df.values.tolist()"""
 
-df = pd.read_excel("./decision_data_new.xlsx", "sys_mini2")
+df = pd.read_excel("./decision_data_new.xlsx", "sys_wall")
 
 df_mat = df.values.tolist()
 
