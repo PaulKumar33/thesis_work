@@ -57,6 +57,13 @@ class system_main:
         GPIO.setup(2, GPIO.OUT)
         self.gpioLOW(2)
         
+        self.gpioHIGH(2)
+        self.gpioHIGH(16)
+        time.sleep(1)
+        
+        self.gpioLOW(2)
+        self.gpioLOW(16)
+        
 
         try:
             if (os.name == 'nt'):
@@ -189,7 +196,7 @@ class system_main:
         buzz_tik = 0
         while(True):
             #for the sample rate
-            time.sleep(0.035)
+            time.sleep(0.03)
             if(int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track)>= 1):
                 with open('hw_tracking.csv', 'a') as fd:
                     # fd.write(self.csv_write)
@@ -389,12 +396,12 @@ class system_main:
                                 last_peak_differential = 1 if self.peak_points[1] < self.peak_points[3] else 0
 
                                 print(type(temp[0]), type(temp[1]), type(temp[4]), type(temp[6]), type(gradient))
-                                #_classify = impurity.classify([temp[0], temp[1], gradient, temp[2], temp[3],
-                                #                               gradient_2, temp[4], temp[5], temp[6],
-                                #                               temp[7],first_peak_differential,
-                                #                               last_peak_differential], self.tree)
+                                _classify = impurity.classify([temp[0], temp[1], gradient, temp[2], temp[3],
+                                                               gradient_2, temp[4], temp[5], temp[6],
+                                                               temp[7],first_peak_differential,
+                                                               last_peak_differential], self.tree)
                                 #classify for the new datas
-                                _classify = impurity.classify([gradient, gradient_2, temp[4], first_peak_differential, last_peak_differential], self.tree)
+                                #_classify = impurity.classify([gradient, gradient_2, temp[4], first_peak_differential, last_peak_differential], self.tree)
                                 max_guess = 0
                                 max_class = None
 
