@@ -449,12 +449,13 @@ class system_main:
                     very easy, if both variance are high and first_peak_time_1 < first_peak_time_2 -> right
                     elif(opposite) -> lef
                     '''
-                    if(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 'left'):
+                    self.peak_points = self.nullNonePeaks(self.peak_points)
+                    if(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 0):
                         #buzz buzz buzz
                         self.gpioHIGH(2)
                         buzz_tik = time.time()
                         pass
-                    elif(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 'right'):
+                    elif(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 1):
                         # buzz buzz buzz\
                         self.gpioHIGH(2)
                         buzz_tik = time.time()
