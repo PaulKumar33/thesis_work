@@ -461,13 +461,15 @@ class system_main:
                         buzz_tik = time.time()
                         self.BUZZ_FLAG = True
                         pass'''
-
-                    if(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 0):
+                    ##if(self.peak_points[0] != None and self.peak_points[2] )
+                    b1 = self.peak_points[0] if self.peak_points[0] != None else -1
+                    b2 = self.peak_points[2] if self.peak_points[0] != None else -1
+                    if(b1<b2 and DIRECTION_FLAG == 0):
                         if (self.BUZZ_FLAG == False and time.time() - buzz_tik >= 10 and self.CUE_FLAG and _evt_time >= 10):
                             self.gpioHIGH(2)
                             self.BUZZ_FLAG = True
                             buzz_tik = time.time()
-                    elif(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 1):
+                    elif(b1>b2 and DIRECTION_FLAG == 1):
                         if(self.BUZZ_FLAG == False and time.time() - buzz_tik >= 10 and self.CUE_FLAG and _evt_time >= 10):
                             self.gpioHIGH(2)
                             self.BUZZ_FLAG = True
