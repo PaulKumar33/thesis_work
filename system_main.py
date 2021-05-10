@@ -449,7 +449,7 @@ class system_main:
                     very easy, if both variance are high and first_peak_time_1 < first_peak_time_2 -> right
                     elif(opposite) -> lef
                     '''
-                    self.peak_points = self.nullNonePeaks(self.peak_points)
+                    '''self.peak_points = self.nullNonePeaks(self.peak_points)
                     if(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 0):
                         #buzz buzz buzz
                         self.gpioHIGH(2)
@@ -460,7 +460,18 @@ class system_main:
                         self.gpioHIGH(2)
                         buzz_tik = time.time()
                         self.BUZZ_FLAG = True
-                        pass
+                        pass'''
+
+                    if(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 0):
+                        if (self.BUZZ_FLAG == False and time.time() - buzz_tik >= 10 and self.CUE_FLAG and _evt_time >= 10):
+                            self.gpioHIGH(2)
+                            self.BUZZ_FLAG = True
+                            buzz_tik = time.time()
+                    elif(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 1):
+                        if(self.BUZZ_FLAG == False and time.time() - buzz_tik >= 10 and self.CUE_FLAG and _evt_time >= 10):
+                            self.gpioHIGH(2)
+                            self.BUZZ_FLAG = True
+                            buzz_tik = time.time()
                     '''if(Sk/self.buffer_length > self.var_limit and Sk_2/self.buffer_length > self.var_limit and
                        self.second_peak != None and self.peak_points[0] != None and self.peak_points[2] != None):
                         if(self.peak_points[0] < self.peak_points[2] and self.second_peak >= 2.5):
