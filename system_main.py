@@ -163,7 +163,7 @@ class system_main:
 
         self.DATA_STOP = False                          #RAISED WHEN THE DATA STOP EVENT OCCURS
         self.BUZZ_FLAG = False                          #RAISED WHEN THE BUZZER BEEPS
-        self.LAST_DIRECTION = False                     #RAISED AT ANY DIRECTION EVENT
+        self.LAST_DIRECTION = 0                         #RAISED AT ANY DIRECTION EVENT
         self.STOP_TIME = 0                              #ACCUMULATES FOR WHEN THE STOP EVENT IS RAISED
         self.LAST_TRIGGER_TIME = -1                     #TRACKS THE TIME OF THE LAST CLASSIFICATION
         self.LAST_HW_TIME = -1                          #TRACKS THE TIME OF THE LAST HW
@@ -236,12 +236,14 @@ class system_main:
             if(FLAGS["HW_FLAG"]):
                 print("PRINTING FLAGS")
                 self.printFlags()
+
                 if(time.time() - self.LAST_TRIGGER_TIME < 5*60 and self.LAST_DIRECTION == 1):
                     self.HW_COUNT += 1
                 else:
                     self.HW_COUNT += 1  # need to check if we recorded the wash. Set the flag low after its completed
                     self.HW_EVENT += 1
 
+                self.LAST_DIRECTION = 0
                 self.LAST_HW_TIME = time.time()
 
                 FLAGS["HW_FLAG"] = False
@@ -449,19 +451,7 @@ class system_main:
                     very easy, if both variance are high and first_peak_time_1 < first_peak_time_2 -> right
                     elif(opposite) -> lef
                     '''
-                    '''self.peak_points = self.nullNonePeaks(self.peak_points)
-                    if(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 0):
-                        #buzz buzz buzz
-                        self.gpioHIGH(2)
-                        buzz_tik = time.time()
-                        pass
-                    elif(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 1):
-                        # buzz buzz buzz\
-                        self.gpioHIGH(2)
-                        buzz_tik = time.time()
-                        self.BUZZ_FLAG = True
-                        pass'''
-                    ##if(self.peak_points[0] != None and self.peak_points[2] )
+
                     b1 = self.peak_points[0] if self.peak_points[0] != None else -1
                     b2 = self.peak_points[2] if self.peak_points[2] != None else -1
                     if(b1<b2 and (b1!=-1 and b2 != -1) and DIRECTION_FLAG == 0):
@@ -508,8 +498,6 @@ class system_main:
                 break
 
         print(f"elapsed time {tok - tik}")
-        #print(f"sample rate: {len(self.csvData[1]) / (tok - tik)}\n")
-        
         
         print(f"total HW events: {self.HW_EVENT}")
         print(f"total HW completed: {self.HW_COUNT}")
