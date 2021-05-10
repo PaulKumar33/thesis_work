@@ -7,6 +7,8 @@ import csv
 #import scipy.stats
 import pandas as pd
 import os
+import signal
+import atexit
 
 
 import mcp_3008_driver as mcp
@@ -26,11 +28,17 @@ def softwareBuzzInteruppt():
 FLAGS={
     "HW_FLAG": False
     }
-class system_main:   
+class system_main:
+
+    def handleExit(self, signum, frame):
+        self.gpioLOW(2)
+        self.gpioLOW(16)
     
     def __init__(self, low_delay, wait_time, peak_method="peak_detection", window_thresholds=[2.25, 2.75],
                variance_threshold=0.095):
-
+        atexit.register(self.handleExit, None, None)
+        signal.signal(signal.SIGTERM, self.handleExit)
+        signal.signal(signal.SIGINT, self.handleExit)
         self.filter_length = 3
         self.buffer_length = 16 #length of the variance data buffer
         self.low_delay = low_delay
@@ -437,14 +445,29 @@ class system_main:
                 elif((Sk/self.buffer_length > self.var_limit and self.DATA_STOP == False) or
                      (Sk_2/self.buffer_length > self.var_limit and self.DATA_STOP == False)):
                     #we have detected movement and no HW event yet
-                    if(Sk/self.buffer_length > self.var_limit and Sk_2/self.buffer_length > self.var_limit and
+                    '''
+                    very easy, if both variance are high and first_peak_time_1 < first_peak_time_2 -> right
+                    elif(opposite) -> lef
+                    '''
+                    if(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 'left'):
+                        #buzz buzz buzz
+                        self.gpioHIGH(2)
+                        buzz_tik = time.time()
+                        pass
+                    elif(self.peak_points[0] < self.peak_points[2] and DIRECTION_FLAG == 'right'):
+                        # buzz buzz buzz\
+                        self.gpioHIGH(2)
+                        buzz_tik = time.time()
+                        self.BUZZ_FLAG = True
+                        pass
+                    '''if(Sk/self.buffer_length > self.var_limit and Sk_2/self.buffer_length > self.var_limit and
                        self.second_peak != None and self.peak_points[0] != None and self.peak_points[2] != None):
                         if(self.peak_points[0] < self.peak_points[2] and self.second_peak >= 2.5):
                             if(self.BUZZ_FLAG == False and time.time() - buzz_tik >= 10 and self.CUE_FLAG and _evt_time >=10):
                                 self.gpioHIGH(2)
                                 self.BUZZ_FLAG = True
-                                buzz_tik = time.time()
-                    elif(self.BUZZ_FLAG == True and time.time() - buzz_tik >= 0.25):
+                                buzz_tik = time.time()'''
+                    if(self.BUZZ_FLAG == True and time.time() - buzz_tik >= 0.25):
                         self.gpioLOW(2)
                         
                     _event = True
