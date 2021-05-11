@@ -169,7 +169,7 @@ class system_main:
         self.LAST_HW_TIME = -1                          #TRACKS THE TIME OF THE LAST HW
         self.HW_DELAY_TIME = 2.5*60                     #HW DELAY TIME DEFAULT
         
-        self.CUE_FLAG = True
+        self.CUE_FLAG = False
         
         self.CURRENT_STATUS = 'NO_CUE'
         self.curr_time_track = datetime.datetime.today().strftime("%M")
@@ -200,6 +200,7 @@ class system_main:
 
         counter = 5
         print("start")
+        hw_wait = 2
         cnt2 = 0
         buzz_tik = 0
         while(True):
@@ -214,7 +215,7 @@ class system_main:
                     self.curr_time_track = datetime.datetime.today().strftime("%M")
                 
             
-            if(datetime.datetime.today().strftime("%Y-%m-%d:%H-%M") == "2021-04-04:15-30"):
+            if(datetime.datetime.today().strftime("%Y-%m-%d:%H-%M") == "2021-05-10:22-35"):
                 self.CUE_FLAG = True
                 self.CURRENT_STATUS = "CUES"
             
@@ -232,12 +233,15 @@ class system_main:
                 self.csvData[1] = self.csvData[1][-128:]
                 self.csvData[2] = self.csvData[2][-128:]
                 print('truncating')
+                
+            if(time.time() - self.LAST_TRIGGER_TIME > hw_wait*60 and self.LAST_DIRECTION == 1):
+                self.LAST_DIRECTION = 0
 
             if(FLAGS["HW_FLAG"]):
                 print("PRINTING FLAGS")
                 self.printFlags()
 
-                if(time.time() - self.LAST_TRIGGER_TIME < 5*60 and self.LAST_DIRECTION == 1):
+                if(time.time() - self.LAST_TRIGGER_TIME < hw_wait*60 and self.LAST_DIRECTION == 1):
                     self.HW_COUNT += 1
                 else:
                     self.HW_COUNT += 1  # need to check if we recorded the wash. Set the flag low after its completed
@@ -493,7 +497,7 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (time.time() - tik > 7.5*60):
+            if (time.time() - tik > 27.5*60):
                 tok = time.time()
                 break
 
