@@ -534,11 +534,17 @@ class system_main:
             print("LAST_DIRECTION SET: {}".format(self.LAST_DIRECTION))
             return
 
-        elif (max_class != 'left' and DIRECTION_FLAG == 0):
+        elif (max_class == 'right' and DIRECTION_FLAG == 0):
             self.gpioLOW(16)
             self.LAST_DIRECTION = 0
             self.LAST_TRIGGER_TIME = time.time()
             print("Direction of no interest")
+        elif (max_class == 'left' and DIRECTION_FLAG == 1):
+            self.gpioLOW(16)
+            self.LAST_DIRECTION = 0
+            self.LAST_TRIGGER_TIME = time.time()
+            print("Direction of no interest")
+
         elif (max_class == 'right' and DIRECTION_FLAG == 1):
             #TRIGGER THE EVENT IF A RECENT LEAVE HASNT OCCURRED# ----> LAST_DIRECTION == 0 IS NEGATIVE DIRECTION
             if (time.time() - self.LAST_TRIGGER_TIME > self.HW_DELAY_TIME
@@ -560,24 +566,23 @@ class system_main:
 
 
         elif (max_class == 'left' and DIRECTION_FLAG == 0):
-            if(time.time() - self.LAST_TRIGGER_TIME > self.HW_DELAY_TIME or
-               self.LAST_TRIGGER_TIME == -1):
+            # TRIGGER THE EVENT IF A RECENT LEAVE HASNT OCCURRED# ----> LAST_DIRECTION == 0 IS NEGATIVE DIRECTION
+            if (time.time() - self.LAST_TRIGGER_TIME > self.HW_DELAY_TIME
+                    or self.LAST_TRIGGER_TIME == -1):
+                # IF LAST WAS LEFT AND COME BACK WITHIN 5
                 self.HW_EVENT += 1
-                if(self.CUE_FLAG == True):
+                if (self.CUE_FLAG == True):
                     self.gpioHIGH(16)
                 self.LAST_DIRECTION = 1
-                print("Event capture")
+                print("Event captured")
+            elif (self.LAST_DIRECTION == 0):
+                if (self.CUE_FLAG == True):
+                    self.gpioHIGH(16)
+                self.LAST_DIRECTION = 1
 
             self.LAST_DIRECTION = 1
             self.LAST_TRIGGER_TIME = time.time()
             return
-        
-        elif (max_class != 'right' and DIRECTION_FLAG == 1):
-            self.gpioLOW(16)
-            self.LAST_DIRECTION = 0
-            self.LAST_TRIGGER_TIME = time.time()
-            print("Direction of no interest")
-
 
     def runPeakDetection(self, t):
         # simple implementation of the peak detection algorithm
