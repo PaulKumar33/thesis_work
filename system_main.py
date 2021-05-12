@@ -206,16 +206,17 @@ class system_main:
         while(True):
             #for the sample rate
             time.sleep(0.03)
-            if(int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track)>= 1):
-                with open('hw_tracking.csv', 'a') .ras fd:
+            if(int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track)>= 10
+               or int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track) < -5):
+                with open('hw_tracking.csv', 'a') as fd:
                     # fd.write(self.csv_write)
                     print("writitng")
                     writer = csv.writer(fd)                    
-                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 0, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
                     self.curr_time_track = datetime.datetime.today().strftime("%M")
                 
             
-            if(datetime.datetime.today().strftime("%Y-%m-%d:%H-%M") == "2021-05-10:23-15"):
+            if(datetime.datetime.today().strftime("%Y-%m-%d:%H-%M") == "2021-05-11:12-00"):
                 self.CUE_FLAG = True
                 self.CURRENT_STATUS = "CUES"
             
@@ -236,7 +237,13 @@ class system_main:
                 
             if(time.time() - self.LAST_TRIGGER_TIME > hw_wait*60 and self.LAST_DIRECTION == 1):
                 self.LAST_DIRECTION = 0
-                writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 1, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                with open('hw_tracking.csv', 'a') as fd:
+                    # fd.write(self.csv_write)
+                    print("writitng")
+                    writer = csv.writer(fd)                    
+                    #writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                    
+                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 1, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
 
             if(FLAGS["HW_FLAG"]):
                 print("PRINTING FLAGS")
@@ -244,11 +251,23 @@ class system_main:
 
                 if(time.time() - self.LAST_TRIGGER_TIME < hw_wait*60 and self.LAST_DIRECTION == 1):
                     self.HW_COUNT += 1
-                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 1, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                    with open('hw_tracking.csv', 'a') as fd:
+                    # fd.write(self.csv_write)
+                        print("writitng")
+                        writer = csv.writer(fd)                    
+                        #writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                        
+                        writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 1, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
                 else:
                     self.HW_COUNT += 1  # need to check if we recorded the wash. Set the flag low after its completed
                     self.HW_EVENT += 1
-                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 0, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                    with open('hw_tracking.csv', 'a') as fd:
+                    # fd.write(self.csv_write)
+                        print("writitng")
+                        writer = csv.writer(fd)                    
+                        #writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                        
+                        writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 0, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
 
                 self.LAST_DIRECTION = 0
                 self.LAST_HW_TIME = time.time()
@@ -500,7 +519,7 @@ class system_main:
 
                 trig_time.append(t)
 
-            if (time.time() - tik > 25.5*60):
+            if (time.time() - tik > 20*60*60):
                 tok = time.time()
                 break
 
