@@ -206,8 +206,9 @@ class system_main:
         while(True):
             #for the sample rate
             time.sleep(0.03)
-            if(int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track)>= 10
-               or int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track) < -5):
+
+            if(int(datetime.datetime.today().strftime("%M"))-int(self.curr_time_track)>= 1):
+
                 with open('hw_tracking.csv', 'a') as fd:
                     # fd.write(self.csv_write)
                     print("writitng")
@@ -225,7 +226,6 @@ class system_main:
                 self.gpioLOW(2)
             
             if(self.BUZZ_FLAG == True and time.time() - buzz_tik >= 0.25):
-                print("chimcken")
                 self.gpioLOW(2)
                 self.BUZZ_FLAG = False
 
@@ -240,10 +240,11 @@ class system_main:
                 with open('hw_tracking.csv', 'a') as fd:
                     # fd.write(self.csv_write)
                     print("writitng")
-                    writer = csv.writer(fd)                    
-                    #writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
-                    
-                    writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 1, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+
+                    writer = csv.writer(fd)
+                    writer.writerow([self.HW_EVENT, self.HW_COUNT, self.CURRENT_STATUS,
+                                     datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                    self.curr_time_track = datetime.datetime.today().strftime("%M")
 
             if(FLAGS["HW_FLAG"]):
                 print("PRINTING FLAGS")
@@ -252,22 +253,22 @@ class system_main:
                 if(time.time() - self.LAST_TRIGGER_TIME < hw_wait*60 and self.LAST_DIRECTION == 1):
                     self.HW_COUNT += 1
                     with open('hw_tracking.csv', 'a') as fd:
-                    # fd.write(self.csv_write)
+                        # fd.write(self.csv_write)
                         print("writitng")
-                        writer = csv.writer(fd)                    
-                        #writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
-                        
-                        writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 1, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                        writer = csv.writer(fd)
+                        writer.writerow([self.HW_EVENT, self.HW_COUNT, self.CURRENT_STATUS,
+                                         datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                        self.curr_time_track = datetime.datetime.today().strftime("%M")
                 else:
                     self.HW_COUNT += 1  # need to check if we recorded the wash. Set the flag low after its completed
                     self.HW_EVENT += 1
                     with open('hw_tracking.csv', 'a') as fd:
-                    # fd.write(self.csv_write)
+                        # fd.write(self.csv_write)
                         print("writitng")
-                        writer = csv.writer(fd)                    
-                        #writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
-                        
-                        writer.writerow([self.HW_EVENT,self.HW_COUNT,self.CURRENT_STATUS, 0, datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                        writer = csv.writer(fd)
+                        writer.writerow([self.HW_EVENT, self.HW_COUNT, self.CURRENT_STATUS,
+                                         datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")])
+                        self.curr_time_track = datetime.datetime.today().strftime("%M")
 
                 self.LAST_DIRECTION = 0
                 self.LAST_HW_TIME = time.time()
@@ -276,6 +277,14 @@ class system_main:
 
                 self.DATA_STOP = True                                   #set the stop collection flag
                 self.STOP_TIME = time.time()
+
+                #now clear all the flags
+                Sk_2 = 0
+                Sk_1 = 0
+                self.start_index, self.stop_index, self.first_peak, self.first_peak_2, self.second_peak, self.second_peak_2, self.last_peak, self.last_peak_2, self.end_time, self._max_peak, self._min_peak = \
+                    None, None, None, None, None, None, None, None, None, 2.5, 2.5
+                self.second_last_peak, self.second_last_peak_2 = None, None
+                self.peak_points = [None, None, None, None]
                 print(f"Event recorded: ")
                 continue
 
