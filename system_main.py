@@ -101,7 +101,7 @@ class system_main:
 
     def runCollection(self, sample_points=100):
         
-        DIRECTION_FLAG = 0
+        DIRECTION_FLAG = 1
 
         impurity.print_tree(self.tree)
         print('sleeping for test')
@@ -501,7 +501,8 @@ class system_main:
                             self.gpioHIGH(2)
                             self.BUZZ_FLAG = True
                             buzz_tik = time.time()
-                    
+
+
                     if(self.BUZZ_FLAG == True and time.time() - buzz_tik >= 0.25):
                         self.gpioLOW(2)
                         
@@ -523,8 +524,10 @@ class system_main:
                     print("CONDITION 3")
                     self.gpioLOW(16)
                     trig_tracker.append(0)
+                    self.flash()
                     Sk = 0
                     Sk_2 = 0
+
 
                 trig_time.append(t)
 
@@ -543,7 +546,16 @@ class system_main:
             for row in self.csv_write:
                 writer.writerow(row)
                 
-                
+    def flash(self):
+        cnt = 0
+        while(cnt<2):
+            self.gpioHIGH(16)
+            time.sleep(0.25)
+            self.gpioLOW(16)
+            time.sleep(0.25)
+            cnt += 1
+        return
+
                 
     def printFlags(self):
         print(self.DATA_STOP, self.LAST_DIRECTION,
