@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import signal
+#from scipy import signal
 import time
 
 data1 = [100,
@@ -55,8 +55,9 @@ if __name__ == "__main__":
     x1 = np.linspace(1,len(data1), len(data1))
     x11 = np.linspace(1, len(data1), len(data1))
     x_labels = ["April-4th", "April-5th", "April-6th", "April-7th", "April-8th", "April-9th", "April-10th", "April-11th", "April-12th"]
-    plt.plot(x1, d1, label="3-pt Moving Average")
+
     plt.plot(x1, data1, label="Raw measurements")
+    plt.plot(x1, d1, label="3-pt Moving Average")
     plt.xticks(x1, labels=x_labels)
     plt.ylabel("Compliance [%]")
     plt.legend()
@@ -74,6 +75,5 @@ if __name__ == "__main__":
     plt.ylabel("Compliance [%]")
     plt.legend()
     plt.grid()
-
 
     plt.show()
