@@ -9,7 +9,7 @@ import os
 import time
 import csv
 import pandas as pd
-import impurity
+from decision_tree import impurity
 import json
 
 import mcp_3008_driver as mcp
@@ -63,10 +63,11 @@ class Plot2D(QtWidgets.QMainWindow):
         cnt = 0
         self.lower_buzz()
         while(cnt <= 2):
+            time.sleep(0.5)
             self.LED_indicator(1)
-            time.sleep(0.65)
-            self.LED_indicator(1)
-            time.sleep(0.65)
+            time.sleep(0.5)
+            self.LED_indicator(0)
+            time.sleep(0.5)
             cnt += 1
             print(">>>attempt")
         self.clear_features()
@@ -131,7 +132,7 @@ class Plot2D(QtWidgets.QMainWindow):
         GPIO.setup(16, GPIO.OUT)
         GPIO.setup(2, GPIO.OUT)
         GPIO.setup(24, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.add_event_detect(24, GPIO.RISING, bouncetime=3000, callback=self.hw_isr)
+        GPIO.add_event_detect(24, GPIO.RISING, bouncetime=5000, callback=self.hw_isr)
 
         self.outputGPIO = [2,16]
         self.setGPIOLow()
@@ -266,7 +267,7 @@ class Plot2D(QtWidgets.QMainWindow):
 
     def runCapture(self):
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(10)  # 50ms
+        self.timer.setInterval(50)  # 50ms
         self.timer.timeout.connect(self.update_adc_measurement)
         self.timer.start()
 
@@ -691,13 +692,13 @@ class Plot2D(QtWidgets.QMainWindow):
 def main():
     app = QtWidgets.QApplication(sys.argv)
     main = Plot2D()
-    main.setTitle("Dummy figure")
-    main.setXAxis("time [h]", {'color':'r', 'font-size':'20px'})
-    main.setYAxis("Temperature ")
+    #main.setTitle("Dummy figure")
+    #main.setXAxis("time [h]", {'color':'r', 'font-size':'20px'})
+    #main.setYAxis("Temperature ")
     #main.yLimits([-10, 10], 2)
     #main.limits([0, 3.05, -10, 10])
-    main.grid()
-    main.show()
+    #main.grid()
+    #main.show()
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
