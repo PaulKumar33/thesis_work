@@ -11,6 +11,8 @@ import csv
 import pandas as pd
 from decision_tree import impurity
 import json
+import datetime
+
 
 import mcp_3008_driver as mcp
 import RPi.GPIO as GPIO
@@ -39,6 +41,19 @@ class Plot2D(QtWidgets.QMainWindow):
         self.first_trigger, self.last_trigger = None, None
         s1_p1, s1_p2, s2_p1, s2_p2 = None, None, None, None
         s1_gr, s2_gr = None, None 
+
+    def writeToCSV(self):
+        #open csv
+        print("############################\n\n\n\n")
+        print(">>> Writing to csv")
+        print("Current Results:")
+        print("Total Events: {0}\nTotal Succesful: {1}".format(self.globals["HW_EVENTS"], self.globals["COMPLETED_HW"]))
+        print("############################\n\n\n\n")
+        with open("hw_compliance_data.csv", "a") as f:
+            #date, hw events, hw cnt
+            l = [datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), self.globals["HW_EVENTS"], self.globals["COMPLETED_HW"]]
+            writer = csv.writer(f)
+            writer.writerow(l)
 
 
     def hw_isr(self, e):
@@ -71,6 +86,7 @@ class Plot2D(QtWidgets.QMainWindow):
             cnt += 1
             print(">>>attempt")
         self.clear_features()
+        self.writeToCSV()
             
 
     
@@ -138,29 +154,7 @@ class Plot2D(QtWidgets.QMainWindow):
         self.setGPIOLow()
         time.sleep(0.5)
         print("Done")
-        
 
-        """self.plot = pg.PlotWidget()
-        self.setCentralWidget(self.plot)"""
-
-        '''w = pg.GraphicsLayoutWidget(size=(1000, 750))
-
-        #for signal 1
-        self.plot = w.addPlot(row=0, col=0)
-
-        #for signal 2
-        self.plot2 = w.addPlot(row=0, col=1)
-
-        #for the std1
-        self.plot3 = w.addPlot(row=1, col=0)
-        #for std2
-        self.plot4 = w.addPlot(row=1, col=1)
-        #for acculated
-        self.plot5 = w.addPlot(row=2, col=0)
-        self.plot6 = w.addPlot(row=2, col=1)
-        self.plot7 = w.addPlot(row=3, col=0)
-
-        self.setCentralWidget(w)'''
         self.x = np.arange(0,5.01, 0.01)
         self.y = [randint(-10,10) for _ in range(len(self.x))]
 
@@ -245,14 +239,7 @@ class Plot2D(QtWidgets.QMainWindow):
                     self.x2.append(x2)
                     self.y1 = self.x1
                     self.y2 = self.x2
-            
-            '''self.d = self.plot.plot(self.t, self.x1)
-            self.d1 = self.plot2.plot(self.t, self.x2)
-            self.pl_var_1 = self.plot3.plot(self.t, self.var_1)
-            self.pl_var_2 = self.plot4.plot(self.t, self.var_2)
-            self.pl_p1 = self.plot5.plot(self.t, self.p1)
-            self.pl_p2 = self.plot6.plot(self.t, self.p2)
-            self.t_plot = self.plot7.plot(self.t, self.trigger)'''
+
             self.runCapture()
 
         # plot data: x, y values
@@ -272,6 +259,8 @@ class Plot2D(QtWidgets.QMainWindow):
         self.timer.start()
 
     def update_adc_measurement(self):
+        if(int(datetime.datetime.now().strftime("%M"))%10 == 0):
+            self.writeToCSV()
         self.lower_buzz()
 
         x1 = float(self.mcp.read_IO(0)/65355*5)
@@ -475,15 +464,7 @@ class Plot2D(QtWidgets.QMainWindow):
         self.tp1 = np.concatenate((self.tp1, [self.p1[-1]]), axis=None)
         self.tp2 = np.concatenate((self.tp2, [self.p2[-1]]), axis=None)
         #movavg filter
-        
-        '''if(self.plot_bool):
-            self.d.setData(self.t, self.y1)
-            self.d1.setData(self.t, self.y2)
-            self.pl_var_1.setData(self.t, self.e1)
-            self.pl_var_2.setData(self.t, self.e2)
-            self.pl_p1.setData(self.t, self.p1)
-            self.pl_p2.setData(self.t, self.p2)
-            self.t_plot.setData(self.t, self.trigger)'''
+
         self.cnt +=1
     
     def update_s1_peak(self):
@@ -521,7 +502,6 @@ class Plot2D(QtWidgets.QMainWindow):
             else:
                 self.p1_peaks.append(self.y1[-2])
                 self.p1_t.append(self.t[-2])
-        
             
     def update_s2_peak(self):
         if(self.y2[-3] < self.y2[-2] and self.y2[-1] <= self.y2[-2] and np.abs(self.y2[-2] - self.ss2) >= 0.3):
@@ -558,7 +538,6 @@ class Plot2D(QtWidgets.QMainWindow):
             else:
                 self.p2_peaks.append(self.y2[-2])
                 self.p2_t.append(self.t[-2])
-
 
     def LED_indicator(self, io):
         GPIO.output(16, io)
@@ -692,13 +671,6 @@ class Plot2D(QtWidgets.QMainWindow):
 def main():
     app = QtWidgets.QApplication(sys.argv)
     main = Plot2D()
-    #main.setTitle("Dummy figure")
-    #main.setXAxis("time [h]", {'color':'r', 'font-size':'20px'})
-    #main.setYAxis("Temperature ")
-    #main.yLimits([-10, 10], 2)
-    #main.limits([0, 3.05, -10, 10])
-    #main.grid()
-    #main.show()
     sys.exit(app.exec_())
 
 if __name__ == "__main__":
