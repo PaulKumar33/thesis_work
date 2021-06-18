@@ -74,17 +74,23 @@ class Plot2D(QtWidgets.QMainWindow):
 
         #set the timers to neg times
         self.globals["TRIG_TIME"] = -3*60
-        
-        cnt = 0
         self.lower_buzz()
-        while(cnt <= 2):
-            time.sleep(0.5)
-            self.LED_indicator(1)
-            time.sleep(0.5)
-            self.LED_indicator(0)
-            time.sleep(0.5)
-            cnt += 1
-            print(">>>attempt")
+        
+        #loop unravel
+        self.LED_indicator(1)
+        time.sleep(0.5)
+        self.LED_indicator(0)
+        time.sleep(0.5)
+        self.LED_indicator(1)
+        time.sleep(0.5)
+        self.LED_indicator(0)
+        time.sleep(0.5)
+        self.LED_indicator(1)
+        time.sleep(0.5)
+        self.LED_indicator(0)
+        time.sleep(0.5)
+        #loop unravel
+        
         self.clear_features()
         self.writeToCSV()
             
@@ -116,13 +122,13 @@ class Plot2D(QtWidgets.QMainWindow):
         self.globals = {
             "COMPLETED_HW": 0,
             "HW_EVENTS": 0,
-            "BUZZER_TIME": -0.55,
+            "BUZZER_TIME": -0.75,
             "TRIG_TIME": -3*60,
             "HW_TRIG_TIME": -2.5*60,
             "SUCCESS_TRIG": -.5*60,
             "TRIG_THRESH": 3*60,
             "HW_TIMER_THRESH": 2*60,
-            "BUZZER_THRESH": 0.55,
+            "BUZZER_THRESH": 0.75,
             "SUCCESS_TIMER_THRESH": 0.5*60,
             "LAST_DIR": None,
         }
@@ -203,6 +209,8 @@ class Plot2D(QtWidgets.QMainWindow):
             self.trigger_cnt = 0
             self.flash_cnt = 0
             self.flash = 1
+            self.collect = True
+            #self.test_cnt = 0
 
             df = pd.read_csv("./localization.csv")
             # df = df.drop(columns=['figure'])
@@ -254,17 +262,26 @@ class Plot2D(QtWidgets.QMainWindow):
 
     def runCapture(self):
         self.timer = QtCore.QTimer()
-        self.timer.setInterval(50)  # 50ms
+        self.timer.setInterval(35)  # 50ms
         self.timer.timeout.connect(self.update_adc_measurement)
         self.timer.start()
+        '''while(True):
+            time.sleep(0.025)
+            self.update_adc_measurement()'''
 
     def update_adc_measurement(self):
-        if(int(datetime.datetime.now().strftime("%M"))%10 == 0):
+        if(int(datetime.datetime.now().strftime("%M"))%50 == 0 and self.collect):
             self.writeToCSV()
+            self.collect = False
+        elif(int(datetime.datetime.now().strftime("%M"))%50 != 0):
+            self.collect = True
         self.lower_buzz()
 
         x1 = float(self.mcp.read_IO(0)/65355*5)
         x2 = float(self.mcp.read_IO(1) / 65355 * 5)
+        '''if(self.test_cnt % 500 == 0):
+            print(x2)
+        self.test_cnt += 1 '''
         ttemp = self.t[1:] if len(self.t[1:]) <= 128 else self.t[1:128]
         x1temp = self.x1[1:] if len(self.x1[1:]) <= 128 else self.x1[1:128]
         x2temp = self.x2[1:] if len(self.x2[1:]) <= 128 else self.x2[1:128]
@@ -326,7 +343,7 @@ class Plot2D(QtWidgets.QMainWindow):
             self.flash_cnt = 0
 
         #implement the schmitt trigger
-        if(e1 >= 0.6 or e2 >= 0.6):
+        if(e1 >= 0.75 or e2 >= 0.75):
             self.LED_indicator(1)
             # get the first sensor high
             self.trigger_cnt += 1
@@ -543,7 +560,7 @@ class Plot2D(QtWidgets.QMainWindow):
         GPIO.output(16, io)
         
     def lower_buzz(self):
-        if(np.abs(time.time() - self.globals["BUZZER_TIME"])):
+        if(np.abs(time.time() - self.globals["BUZZER_TIME"]) >= self.globals["BUZZER_THRESH"]):
             self.buzzer_indicator(0)
             #self.flags["BUZZ"] = False
 
