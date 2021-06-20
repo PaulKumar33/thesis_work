@@ -172,7 +172,7 @@ class Plot2D(QtWidgets.QMainWindow):
             self.buffer = 8
             self.N = 3
             self.N2 = 3
-            self.M=39
+            self.M=19
             self.hd = self.build_fir_square(self.M, np.pi/3)
 
             self.calcSS()
@@ -343,7 +343,7 @@ class Plot2D(QtWidgets.QMainWindow):
             self.flash_cnt = 0
 
         #implement the schmitt trigger
-        if(e1 >= 0.75 or e2 >= 0.75):
+        if(e1 >= 0.9 or e2 >= 0.9):
             self.LED_indicator(1)
             # get the first sensor high
             self.trigger_cnt += 1
@@ -357,7 +357,7 @@ class Plot2D(QtWidgets.QMainWindow):
             else:
                 self.last_trigger = 0
             
-            if(e1 >= 0.6 and e2 >= 0.6):
+            if(e1 >= 0.9 and e2 >= 0.9):
                 if(self.first_trigger == 0 and self.flags["DIRECTION"] == 1 and self.flags["BUZZ"]==False):
                     self.buzzer_indicator(1)
                     self.globals["BUZZER_TIME"] = time.time()
@@ -391,7 +391,7 @@ class Plot2D(QtWidgets.QMainWindow):
                 self.update_s1_peak()
             if(np.abs(self.y2[-1] - self.ss2) >= 0.3):
                 self.update_s2_peak()
-        elif(e1 <= 0.065 and e2 <= 0.065 and self.schmit_trig == 1):
+        elif(e1 <= 0.15 and e2 <= 0.15 and self.schmit_trig == 1):
             self.LED_indicator(1)
             self.schmit_trig = 0
             ttrigger = self.trigger[1:] if len(self.trigger[1:]) <= 128 else self.trigger[1:128]
