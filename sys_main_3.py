@@ -235,13 +235,14 @@ class sys_main_3:
     
     def runCapture(self):
         while(True):
-            time.sleep(0.025)
+            time.sleep(0.03)
             self.update_adc_measurement()
             
             
     def update_adc_measurement(self):
-        if(self.cues == False and datetime.datetime.today().strftime("%Y-%m-%d:%H-%M")=="2021-06-23:12-00"):
-            self.cues == True
+        if(self.cues == False and datetime.datetime.now().strftime("%Y/%m/%d-%H:%M")=="2021/07/14-11:16"):
+            print("HERE 1")
+            self.cues = True
         if(int(datetime.datetime.now().strftime("%M"))%50 == 0 and self.collect):
             self.writeToCSV()
             self.collect = False
@@ -316,6 +317,7 @@ class sys_main_3:
 
         #implement the schmitt trigger
         if(e1 >= 0.9 or e2 >= 0.9):
+            print(self.cues)
             if(self.cues):
                 self.LED_indicator(1)
             # get the first sensor high
@@ -330,16 +332,14 @@ class sys_main_3:
             else:
                 self.last_trigger = 0
             
-            if(e1 >= 0.9 and e2 >= 0.9):
-                if(self.first_trigger == 0 and self.flags["DIRECTION"] == 1 and self.flags["BUZZ"]==False and self.cues):
-                    self.buzzer_indicator(1)
-                    self.globals["BUZZER_TIME"] = time.time()
-                    self.flags["BUZZ"] = True
-                elif(self.first_trigger == 1 and self.flags["DIRECTION"] == 0 and self.flags["BUZZ"]==False and self.cues):
-                    self.buzzer_indicator(1)
-                    self.globals["BUZZER_TIME"] = time.time()
-                    self.flags["BUZZ"] = True
-                    
+            if(e1 >= 0.9 and e2 >= 0.9):                
+                if(self.cues and self.flags["BUZZ"] and np.abs(time.time() - self.globals["TRIG_TIME"]) >= self.globals["TRIG_THRESH"]
+                   and np.abs(time.time() - self.globals["HW_TRIG_TIME"]) >= self.globals["HW_TIMER_THRESH"]):
+                    if((self.first_trigger == 0 and self.flags["DIRECTION"] == 1) or
+                       (self.first_trigger == 1 and self.flags["DIRECTION"] == 0)):
+                        self.buzzer_indicator(1)
+                        self.globals["BUZZER_TIME"] = time.time()
+                        self.flags["BUZZ"] = True                   
 
             #update the energy buffers
             self.e_buffer_1 = np.concatenate((self.e_buffer_1[1:-1], e1), axis=None)
@@ -348,17 +348,6 @@ class sys_main_3:
             self.schmit_trig = 1
             ttrigger = self.trigger[1:] if len(self.trigger[1:]) <= 128 else self.trigger[1:128]
             self.trigger = np.concatenate((ttrigger, [1]),axis=None)
-
-            #this is for the location
-            '''_classify = impurity.classify([p1,p2,e1,e2],
-                                          self.tree)
-            max_guess = 0
-            max_class = None
-
-            for _class_ in _classify:
-                if (_classify[_class_] > max_guess):
-                    max_class, max_guess = _class_, _classify[_class_]
-            #print("Location: {}".format(max_class))'''
                 
             if(np.abs(self.y1[-1] - self.ss1) >= 0.3):
                 self.update_s1_peak()
@@ -412,12 +401,7 @@ class sys_main_3:
                 else:
                     print("Data low. Here is direction: {}".format(max_class))
 
-                '''with open("direction_data.csv", "a") as dd:
-                    writer = csv.writer(dd)
-                    writer.writerow([self.first_trigger, self.last_trigger, s1_gr, s2_gr, s1_p1, s1_p2, s2_p1, s2_p2])'''
             self.clear_features()              
-            '''self.d1.setData(self.t, self.y2)
-            self.d.setData(self.t, self.y1)'''
             
         elif(self.schmit_trig == 0):
             if(self.flags["TRIG"]):
@@ -444,17 +428,6 @@ class sys_main_3:
         self.p2 = self.p2[1:] if len(self.p2[1:]) <= 128 else self.p2[1:128]
         p2 = self.update_array_movag(p2, self.p2[-1 - self.N + 1: -1], self.N)
         self.p2 = np.concatenate((self.p2, [p2]), axis=None)
-
-
-        self.tt = np.concatenate((self.tt, [self.t[-1]]), axis=None)
-        self.ty1 = np.concatenate((self.ty1, [self.y1[-1]]),axis=None)
-        self.ty2 = np.concatenate((self.ty2, [self.y2[-1]]), axis=None)
-        self.te1 = np.concatenate((self.te1, [self.e1[-1]]), axis=None)
-        self.te2 = np.concatenate((self.te2, [self.e2[-1]]), axis=None)
-        self.tp1 = np.concatenate((self.tp1, [self.p1[-1]]), axis=None)
-        self.tp2 = np.concatenate((self.tp2, [self.p2[-1]]), axis=None)
-        #movavg filter
-
         self.cnt +=1
     
     def update_s1_peak(self):
