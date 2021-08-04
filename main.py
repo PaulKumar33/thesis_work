@@ -2,6 +2,7 @@ import machine
 from machine import ADC
 import utime
 import time
+import math
 
 
 
@@ -76,11 +77,67 @@ def lightsleep():
 ##############################################'''
 
 #reduce clock speed
-machine.freq(20000000)
-FLAGS = 0b0000000
-timers_irq ={"ir":-5*1000}
-thresh_irq = {"ir": 5*1000}
+machine.freq(13000000)
+l = machine.Pin(25, machine.Pin.OUT)
 
+def flash_LED(num):
+    cnt = 0
+    while(cnt<num):
+        l.value(1)
+        utime.sleep(0.5)
+        l.value(0)
+        utime.sleep(0.5)
+        cnt += 1
+
+def build_fir_square(width, wc):
+    '''builds the fir window square filter'''
+    M = width
+    n = np.arange(0, M, 1)
+
+    inner = wc * (n - (M - 1) / 2)
+    hd = np.sin(inner) / (np.pi * (n - (M - 1) / 2))
+    hd[int((M - 1) / 2)] = wc / np.pi
+
+    return hd
+
+def calculateSS():
+    mk0, mk1, cnt = 0, 0, 1
+    global adc_0, adc_1, vref, ss1, ss2
+    while(cnt <= 1000):
+        if(cnt%100 == 0):
+            print("{}% Done".format(cnt/1000.0 * 100))
+        x1 = float(adc_0.read_u16()/65355*vref)
+        x2 = float(adc_1.read_u16()/65355*vref)
+
+        #recursive mean
+        mk0 = mk0*(cnt-1)/cnt + x1/cnt
+        mk1 = mk1*(cnt-1)/cnt + x2/cnt
+
+        cnt +=1
+
+    print("Steady state calculated: {0}, {1}".format(mk0, mk1))
+    ss1 = mko
+    ss2 = mk1
+
+
+#0b0000001 - HW TIMER
+#0b0000010 - last direction
+#0b0000100 - data
+#0b0001000 - trig
+#0b0010000 - buzz
+#0b0100000 - cues
+#0b1000000 - collect
+FLAGS = 0b0000000
+HW_GLOBALS = {"COMPLETED_HW":0, "HW_EVENTS":0}
+timers_irq = {"ir":-5*1000}
+thresh_irq = {"ir": 5*1000}
+timers     = {"BUZZ_TIME":-750, "TRIG_TIME":-3*60*1000,
+              "HW_TRIG_TIME":-2.5*60*1000, "SUCCES_TRIG":-30*1000}
+thresh     = {"SUCCESS_THRESH":30*1000, "BUZZ_THRESH": 750,
+              "TRIG_THRESH": 3*60*1000}
+
+print("Defaults set")
+flash_LED(2)
 
 #convention - for peripherals we will use one _
 #convention - for interrupt methods we will use __ 2
@@ -95,6 +152,8 @@ WAKE_UP  = 15
 ADC_0 = 26
 ADC_1 = 27
 
+vref = 5
+
 ##setup the device and the ios
 
 #can use the third argument as PULL UP or PULL DOWN
@@ -107,6 +166,67 @@ wake_up    = machine.Pin(WAKE_UP, machine.Pin.IN, machine.Pin.PULL_DOWN)
 
 adc_0      = ADC(machine.Pin(ADC_0))
 adc_1      = ADC(machine.Pin(ADC_1))
+
+print("Peripherals Set")
+utime.sleep(3)
+flash_LED(3)
+
+#lets setup the energy buffer
+e_buffer_len = 10
+e_buffer_1 = [0 for i in range(e_buffer_len)]
+e_buffer_2 = [0 for i in range(e_buffer_len)]
+
+#let the light go for 3 flashes again
+utime.sleep(3)
+flash_LED(3)
+
+#lets set up the globals now
+buffer = 8
+N = 3
+N2 = 3
+M = 19
+hd = build_fir_square(M, math.pi/3)
+
+ss1, ss2 = 0
+calculateSS()
+
+#calculate the variances
+var_1 = [0 for i in range(128)]
+var_2 = [0 for i in range(128)]
+
+#lets fill the arrays first
+t = []
+x1 = []
+x2 = []
+y1 = []
+y2 = []
+p1 = [0 for i in range(128)]
+p2 = [0 for i in range(128)]
+trigger = [0 for i in range(128)]
+p1_peaks = []
+p2_peaks = []
+p1_t = []
+p2_t = []
+first_trigger = None
+last_trigger = None
+
+
+#set tracking variables for csv
+tt  = []
+ty1 = []
+ty2 = []
+te1 = []
+te2 = []
+tp1 = []
+tp2 = []
+cnt = 0
+trigger_cnt = 0
+flash_cnt = 0
+flash = 1
+
+#set cue and collect flags
+FLAGS = FLAGS | 0b1100000
+
 
 def _led_(io):
     '''this method turns the LED on or off'''
@@ -135,12 +255,6 @@ def irq_sleep(pin):
 ir_in.irq(handler=__ir__, trigger=machine.Pin.IRQ_RISING)
 wake_up.irq(irq_sleep,
         machine.Pin.IRQ_RISING)
-
-#setup adc
-
-
-def calculateSS(adc_num):
-    return
 
 
 #run setup
