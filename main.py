@@ -91,12 +91,19 @@ def flash_LED(num):
 
 def build_fir_square(width, wc):
     '''builds the fir window square filter'''
-    M = width
-    n = np.arange(0, M, 1)
-
-    inner = wc * (n - (M - 1) / 2)
-    hd = np.sin(inner) / (np.pi * (n - (M - 1) / 2))
-    hd[int((M - 1) / 2)] = wc / np.pi
+    M, hd = width, [0 for i in range(width)]
+    #n = np.arange(0, M, 1)
+    #n = [i for i in range(0,M)]
+    for i in range(0,M):
+        print(i)
+        inner = wc*(i-(M-1)/2)
+        if(i-(M-1)/2 == 0):
+            hd[int((M - 1) / 2)] = wc / math.pi
+            continue
+        hd[i] = math.sin(inner)/(math.pi*(i-(M-1)/2))
+    '''inner = wc * (n - (M - 1) / 2)
+    hd = math.sin(inner) / (math.pi * (n - (M - 1) / 2))
+    hd[int((M - 1) / 2)] = wc / math.pi'''
 
     return hd
 
@@ -116,7 +123,7 @@ def calculateSS():
         cnt +=1
 
     print("Steady state calculated: {0}, {1}".format(mk0, mk1))
-    ss1 = mko
+    ss1 = mk0
     ss2 = mk1
 
 
@@ -132,9 +139,9 @@ HW_GLOBALS = {"COMPLETED_HW":0, "HW_EVENTS":0}
 timers_irq = {"ir":-5*1000}
 thresh_irq = {"ir": 5*1000}
 timers     = {"BUZZ_TIME":-750, "TRIG_TIME":-3*60*1000,
-              "HW_TRIG_TIME":-2.5*60*1000, "SUCCES_TRIG":-30*1000}
+              "HW_TRIG_TIME":-2.5*60*1000, "SUCCESS_TRIG":-30*1000}
 thresh     = {"SUCCESS_THRESH":30*1000, "BUZZ_THRESH": 750,
-              "TRIG_THRESH": 3*60*1000}
+              "TRIG_THRESH": 3*60*1000, "HW_TIMER_THRESH":2*60*1000}
 
 print("Defaults set")
 flash_LED(2)
@@ -168,7 +175,6 @@ adc_0      = ADC(machine.Pin(ADC_0))
 adc_1      = ADC(machine.Pin(ADC_1))
 
 print("Peripherals Set")
-utime.sleep(3)
 flash_LED(3)
 
 #lets setup the energy buffer
@@ -177,7 +183,6 @@ e_buffer_1 = [0 for i in range(e_buffer_len)]
 e_buffer_2 = [0 for i in range(e_buffer_len)]
 
 #let the light go for 3 flashes again
-utime.sleep(3)
 flash_LED(3)
 
 #lets set up the globals now
@@ -187,7 +192,7 @@ N2 = 3
 M = 19
 hd = build_fir_square(M, math.pi/3)
 
-ss1, ss2 = 0
+ss1, ss2 = 0, 0
 calculateSS()
 
 #calculate the variances
@@ -210,6 +215,7 @@ p2_t = []
 first_trigger = None
 last_trigger = None
 
+recent_buzz = 0
 
 #set tracking variables for csv
 tt  = []
@@ -232,8 +238,11 @@ def _led_(io):
     '''this method turns the LED on or off'''
     led.value(io)
     
-def _buzz_(io):
-    buzz.value(io)
+def _buzz_():
+    global recent_buzz
+    if(utime.ticks_ms() - recent_buzz > 750):
+        recent_buzz = utime.ticks_ms()
+        buzz.value(not buzz.value())
     
 def _ir_(io):
     ir.value(io)
@@ -267,17 +276,67 @@ time.sleep(1)
 l.value(1)
 time.sleep(1)
 l.value(0)
+
+#now lets setup the buffers
+e1, e2 = [0 for i in range(128)], [0 for i in range(128)]
+x1, x2 = [0 for i in range(128)], [0 for i in range(128)]
+SCHMITT_TRIG = 0
+
+print("setting up sensor buffers")
+for i in range(128):
+    x1 = [float(adc_0.read_u16()/65355*vref)]
+
+def runCapture():
+    x1 = [float(adc_0.read_u16()/65355 * vref)] + x1[:-1]
+    x2 = [float(adc_1.read_u16() / 65355 * vref)] + x2[:-1]
+
+    adj = 127-buffer
+    sigma1, sigma2, vmu1, vmu2 = 0, 0, x1[adj], x2[adj]
+    e1, e2 = 0, 0
+    for k in range(1, buffer):
+        var1 = vmu_1 + (1 / buffer) * (x1[adj + k] - vmu_1)
+        var2 = vmu_2 + (1 / buffer) * (x2[adj + k] - vmu_2)
+        v_partial_1 = sigma1 + (x1[adj + k] - var1) * (x1[adj + k] - var1)
+        v_partial_2 = sigma1 + (x2[adj + k] - var2) * (x2[adj + k] - var2)
+        e1 += pow(abs(x1[adj + k] - ss1), 2)
+        e2 += pow(abs(x2[adj + k] - ss2), 2)
+
+    total = e1+e2
+    p1, p2 = e1/total, e2/total
+    print(p1, p2)
+
+
 while(True):
-    print(adc_1.read_u16())    
+    #CUES
+    if(FLAGS & 0b0100000 == 0b0100000):
+        FLAGS |= 0b0100000
+
+    #BUZZER
+    if(FLAGS & 0b0010000 == 0b0010000 and abs(utime.ticks_ms()-timers["BUZZ_TIME"]) > thresh["BUZZ_THRESH"]):
+        #lower the buzzer
+        FLAGS ^= 0b0010000
+
+    #BUZZER
+    if(FLAGS & 0b0010000 == 0b001000):
+        pass
     
     if((FLAGS & 0b0000001) and (abs(utime.ticks_ms() - timers_irq["ir"]) > thresh_irq["ir"])):
         print("resetting irq")
-        FLAGS = FLAGS & 0b1111110
+        FLAGS ^= 0b0000001
         utime.sleep(2)
         ir_in.irq(handler=__ir__, trigger=machine.Pin.IRQ_RISING)
+
+    #set for data collecting after success
+    if(FLAGS & 0b0000100 != 0b0000100 and abs(utime.ticks_ms() - timers["SUCCESS_TRIG"]) > thresh["SUCCESS_THRESH"]):
+        print("running collection")
+        FLAGS ^= 0b0000100
+    if(FLAGS & 0b0001000 and abs(utime.ticks_ms() - timers["HW_TRIG_TIME"]) >= thresh["HW_TIMER_THRESH"]):
+        FLAGS ^= 0b00100
+
+    runCapture()
     
     
-        
+
         
 
     
