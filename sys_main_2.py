@@ -59,6 +59,7 @@ class Plot2D(QtWidgets.QMainWindow):
     def hw_isr(self, e):
         '''pause execution and edit response'''
         print("HW recorded")
+        self.cycle_buzz = False
         if(self.flags["TRIG"]):
             #if the device was triggered, set
             print("Recording for recent event")
@@ -210,18 +211,19 @@ class Plot2D(QtWidgets.QMainWindow):
             self.flash_cnt = 0
             self.flash = 1
             self.collect = True
+            self.cycle_buzz = False
             #self.test_cnt = 0
 
-            df = pd.read_csv("./localization.csv")
+            #df = pd.read_csv("./localization.csv")
             # df = df.drop(columns=['figure'])
-            df_mat = df.values.tolist()
+            #df_mat = df.values.tolist()
 
             df_direction = pd.read_csv("./direction_data.csv")
             mf_mat_direction = df_direction.values.tolist()
 
-            self.tree = impurity.build_tree(df_mat)
+            #self.tree = impurity.build_tree(df_mat)
             self.tree_dir = impurity.build_tree(mf_mat_direction)
-            impurity.print_tree(self.tree)
+            #impurity.print_tree(self.tree)
             impurity.print_tree(self.tree_dir)
             print("starting capture")
 
@@ -330,12 +332,23 @@ class Plot2D(QtWidgets.QMainWindow):
         
         p1 = e1/total
         p2 = e2/total
-
+        if(np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"]):
+            print(self.flags["BUZZ"], np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"], time.time() - self.globals["BUZZER_TIME"])
+    
         if(self.flags["DATA"] == False and np.abs(time.time() - self.globals["SUCCESS_TRIG"])>=self.globals["SUCCESS_TIMER_THRESH"]):
             #start collecting again
             print(">>> Running collection")
             self.flags["DATA"] = True
-
+        if(self.cycle_buzz == False and np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"] and time.time() - self.globals["BUZZER_TIME"]>= 20):
+            self.globals["BUZZER_TIME"] = time.time()
+            self.cycle_buzz = True
+            print("BUZZ")
+            self.buzzer_indicator(1)
+            
+        elif(self.cycle_buzz == True and np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"] and time.time() - self.globals["BUZZER_TIME"] >= 3):
+            self.buzzer_indicator(0)
+            self.cycle_buzz = False
+            
         if(self.flags["TRIG"] and np.abs(time.time()-self.globals["HW_TRIG_TIME"])>=self.globals["HW_TIMER_THRESH"]):
             #set trig flag to low if outside of the window
             print(">>> Lowering trigger")
@@ -343,7 +356,7 @@ class Plot2D(QtWidgets.QMainWindow):
             self.flash_cnt = 0
 
         #implement the schmitt trigger
-        if(e1 >= 0.75 or e2 >= 0.75):
+        if(e1 >= 3.75 or e2 >= 3.75):
             self.LED_indicator(1)
             # get the first sensor high
             self.trigger_cnt += 1
@@ -439,12 +452,8 @@ class Plot2D(QtWidgets.QMainWindow):
                 else:
                     print("Data low. Here is direction: {}".format(max_class))
 
-                '''with open("direction_data.csv", "a") as dd:
-                    writer = csv.writer(dd)
-                    writer.writerow([self.first_trigger, self.last_trigger, s1_gr, s2_gr, s1_p1, s1_p2, s2_p1, s2_p2])'''
-            self.clear_features()              
-            '''self.d1.setData(self.t, self.y2)
-            self.d.setData(self.t, self.y1)'''
+                
+            self.clear_features()
             
         elif(self.schmit_trig == 0):
             if(self.flags["TRIG"]):
@@ -579,6 +588,7 @@ class Plot2D(QtWidgets.QMainWindow):
                         and np.abs(time.time() - self.globals["HW_TRIG_TIME"]) >= self.globals["HW_TIMER_THRESH"]):
                     print("Event Captured")
                     self.buzzer_indicator(1)
+                    self.cycle_buzz = True
                     self.globals["BUZZER_TIME"] = time.time()
                     #set the trig time
                     self.globals["HW_TRIG_TIME"] = time.time()
