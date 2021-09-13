@@ -356,11 +356,8 @@ class Plot2D(QtWidgets.QMainWindow):
             self.flash_cnt = 0
 
         #implement the schmitt trigger
-<<<<<<< HEAD
         if(e1 >= 3.75 or e2 >= 3.75):
-=======
-        if(e1 >= 0.9 or e2 >= 0.9):
->>>>>>> d607115c447267a39f4a0e79d457cad09a52cef8
+
             self.LED_indicator(1)
             # get the first sensor high
             self.trigger_cnt += 1
