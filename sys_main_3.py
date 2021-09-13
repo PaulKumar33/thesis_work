@@ -1,9 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import pyqtgraph as pg
-from PyQt5 import QtWidgets
-import sys
-from pyqtgraph.Qt import QtGui, QtCore
 from random import randint
 import os
 import time
@@ -12,24 +8,12 @@ import pandas as pd
 from decision_tree import impurity
 import json
 import datetime
-
-
+import sys
 import mcp_3008_driver as mcp
 import RPi.GPIO as GPIO
 
-class Plot2D(QtWidgets.QMainWindow):
-    def setup_gpios(self):
-        GPIO.setmode(GPIO.BCM)
-        with open('./config.json') as f:
-            data = json.load(f)
-            for item in data.items():
-                io = GPIO.OUT if item[1][0] == "out" else GPIO.IN
-                if(item[1][0] == "in"):
-                    logic = GPIO.PUD_DOWN if item[1][0] == "down" else GPIO.PUD_UP
-                    GPIO.setup(int(item[0]), io, logic)
-                if(item[1][0] == "out"):
-                    GPIO.setup(item[0], io)
 
+class sys_main_3:
     def setGPIOLow(self):
         '''called on setup. forces IOs low'''
         for io in self.outputGPIO:
@@ -59,7 +43,6 @@ class Plot2D(QtWidgets.QMainWindow):
     def hw_isr(self, e):
         '''pause execution and edit response'''
         print("HW recorded")
-        self.cycle_buzz = False
         if(self.flags["TRIG"]):
             #if the device was triggered, set
             print("Recording for recent event")
@@ -94,12 +77,10 @@ class Plot2D(QtWidgets.QMainWindow):
         
         self.clear_features()
         self.writeToCSV()
-            
-
+    
+    
     
     def __init__(self, *args, **kwargs):
-        super(Plot2D, self).__init__(*args, **kwargs)
-
         '''
         direction of interest 0 - left, 1 - right
         '''
@@ -211,19 +192,19 @@ class Plot2D(QtWidgets.QMainWindow):
             self.flash_cnt = 0
             self.flash = 1
             self.collect = True
-            self.cycle_buzz = False
+            self.cues = True
             #self.test_cnt = 0
 
-            #df = pd.read_csv("./localization.csv")
+            df = pd.read_csv("./localization.csv")
             # df = df.drop(columns=['figure'])
-            #df_mat = df.values.tolist()
+            df_mat = df.values.tolist()
 
             df_direction = pd.read_csv("./direction_data.csv")
             mf_mat_direction = df_direction.values.tolist()
 
-            #self.tree = impurity.build_tree(df_mat)
+            self.tree = impurity.build_tree(df_mat)
             self.tree_dir = impurity.build_tree(mf_mat_direction)
-            #impurity.print_tree(self.tree)
+            impurity.print_tree(self.tree)
             impurity.print_tree(self.tree_dir)
             print("starting capture")
 
@@ -251,27 +232,17 @@ class Plot2D(QtWidgets.QMainWindow):
                     self.y2 = self.x2
 
             self.runCapture()
-
-        # plot data: x, y values
-        else:
-            #self.d = self.plot.plot(self.x, self.y)
-
-            ##init the timer for real time plotting
-            self.timer = QtCore.QTimer()
-            self.timer.setInterval(10) #50ms
-            self.timer.timeout.connect(self.update_real_time)
-            self.timer.start()
-
+    
     def runCapture(self):
-        self.timer = QtCore.QTimer()
-        self.timer.setInterval(35)  # 50ms
-        self.timer.timeout.connect(self.update_adc_measurement)
-        self.timer.start()
-        '''while(True):
-            time.sleep(0.025)
-            self.update_adc_measurement()'''
-
+        while(True):
+            time.sleep(0.03)
+            self.update_adc_measurement()
+            
+            
     def update_adc_measurement(self):
+        if(self.cues == False and datetime.datetime.now().strftime("%Y/%m/%d-%H:%M")=="2021/07/14-11:16"):
+            print("HERE 1")
+            self.cues = True
         if(int(datetime.datetime.now().strftime("%M"))%50 == 0 and self.collect):
             self.writeToCSV()
             self.collect = False
@@ -332,23 +303,12 @@ class Plot2D(QtWidgets.QMainWindow):
         
         p1 = e1/total
         p2 = e2/total
-        '''if(np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"]):
-            print(self.cycle_buzz == False , np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"], time.time() - self.globals["BUZZER_TIME"])
-        '''
+
         if(self.flags["DATA"] == False and np.abs(time.time() - self.globals["SUCCESS_TRIG"])>=self.globals["SUCCESS_TIMER_THRESH"]):
             #start collecting again
             print(">>> Running collection")
             self.flags["DATA"] = True
-        if(self.cycle_buzz == False and np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"] and time.time() - self.globals["BUZZER_TIME"]>= 20):
-            self.globals["BUZZER_TIME"] = time.time()
-            self.cycle_buzz = True
-            print("BUZZ")
-            self.buzzer_indicator(1)
-            
-        elif(self.cycle_buzz == True and np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"] and time.time() - self.globals["BUZZER_TIME"] >= 3):
-            self.buzzer_indicator(0)
-            self.cycle_buzz = False
-            
+
         if(self.flags["TRIG"] and np.abs(time.time()-self.globals["HW_TRIG_TIME"])>=self.globals["HW_TIMER_THRESH"]):
             #set trig flag to low if outside of the window
             print(">>> Lowering trigger")
@@ -356,12 +316,10 @@ class Plot2D(QtWidgets.QMainWindow):
             self.flash_cnt = 0
 
         #implement the schmitt trigger
-<<<<<<< HEAD
-        if(e1 >= 3.75 or e2 >= 3.75):
-=======
         if(e1 >= 0.9 or e2 >= 0.9):
->>>>>>> d607115c447267a39f4a0e79d457cad09a52cef8
-            self.LED_indicator(1)
+            print(self.cues)
+            if(self.cues):
+                self.LED_indicator(1)
             # get the first sensor high
             self.trigger_cnt += 1
             if(self.first_trigger == None and p1 >= p2):
@@ -374,16 +332,14 @@ class Plot2D(QtWidgets.QMainWindow):
             else:
                 self.last_trigger = 0
             
-            if(e1 >= 0.9 and e2 >= 0.9):
-                if(self.first_trigger == 0 and self.flags["DIRECTION"] == 1 and self.flags["BUZZ"]==False):
-                    self.buzzer_indicator(1)
-                    self.globals["BUZZER_TIME"] = time.time()
-                    self.flags["BUZZ"] = True
-                elif(self.first_trigger == 1 and self.flags["DIRECTION"] == 0 and self.flags["BUZZ"]==False):
-                    self.buzzer_indicator(1)
-                    self.globals["BUZZER_TIME"] = time.time()
-                    self.flags["BUZZ"] = True
-                    
+            if(e1 >= 0.9 and e2 >= 0.9):                
+                if(self.cues and self.flags["BUZZ"] and np.abs(time.time() - self.globals["TRIG_TIME"]) >= self.globals["TRIG_THRESH"]
+                   and np.abs(time.time() - self.globals["HW_TRIG_TIME"]) >= self.globals["HW_TIMER_THRESH"]):
+                    if((self.first_trigger == 0 and self.flags["DIRECTION"] == 1) or
+                       (self.first_trigger == 1 and self.flags["DIRECTION"] == 0)):
+                        self.buzzer_indicator(1)
+                        self.globals["BUZZER_TIME"] = time.time()
+                        self.flags["BUZZ"] = True                   
 
             #update the energy buffers
             self.e_buffer_1 = np.concatenate((self.e_buffer_1[1:-1], e1), axis=None)
@@ -392,24 +348,13 @@ class Plot2D(QtWidgets.QMainWindow):
             self.schmit_trig = 1
             ttrigger = self.trigger[1:] if len(self.trigger[1:]) <= 128 else self.trigger[1:128]
             self.trigger = np.concatenate((ttrigger, [1]),axis=None)
-
-            #this is for the location
-            '''_classify = impurity.classify([p1,p2,e1,e2],
-                                          self.tree)
-            max_guess = 0
-            max_class = None
-
-            for _class_ in _classify:
-                if (_classify[_class_] > max_guess):
-                    max_class, max_guess = _class_, _classify[_class_]
-            #print("Location: {}".format(max_class))'''
                 
             if(np.abs(self.y1[-1] - self.ss1) >= 0.3):
                 self.update_s1_peak()
             if(np.abs(self.y2[-1] - self.ss2) >= 0.3):
                 self.update_s2_peak()
         elif(e1 <= 0.15 and e2 <= 0.15 and self.schmit_trig == 1):
-            self.LED_indicator(1)
+            self.LED_indicator(0)
             self.schmit_trig = 0
             ttrigger = self.trigger[1:] if len(self.trigger[1:]) <= 128 else self.trigger[1:128]
             self.trigger = np.concatenate((ttrigger, [0]),axis=None)
@@ -456,8 +401,7 @@ class Plot2D(QtWidgets.QMainWindow):
                 else:
                     print("Data low. Here is direction: {}".format(max_class))
 
-                
-            self.clear_features()
+            self.clear_features()              
             
         elif(self.schmit_trig == 0):
             if(self.flags["TRIG"]):
@@ -484,17 +428,6 @@ class Plot2D(QtWidgets.QMainWindow):
         self.p2 = self.p2[1:] if len(self.p2[1:]) <= 128 else self.p2[1:128]
         p2 = self.update_array_movag(p2, self.p2[-1 - self.N + 1: -1], self.N)
         self.p2 = np.concatenate((self.p2, [p2]), axis=None)
-
-
-        self.tt = np.concatenate((self.tt, [self.t[-1]]), axis=None)
-        self.ty1 = np.concatenate((self.ty1, [self.y1[-1]]),axis=None)
-        self.ty2 = np.concatenate((self.ty2, [self.y2[-1]]), axis=None)
-        self.te1 = np.concatenate((self.te1, [self.e1[-1]]), axis=None)
-        self.te2 = np.concatenate((self.te2, [self.e2[-1]]), axis=None)
-        self.tp1 = np.concatenate((self.tp1, [self.p1[-1]]), axis=None)
-        self.tp2 = np.concatenate((self.tp2, [self.p2[-1]]), axis=None)
-        #movavg filter
-
         self.cnt +=1
     
     def update_s1_peak(self):
@@ -592,7 +525,6 @@ class Plot2D(QtWidgets.QMainWindow):
                         and np.abs(time.time() - self.globals["HW_TRIG_TIME"]) >= self.globals["HW_TIMER_THRESH"]):
                     print("Event Captured")
                     self.buzzer_indicator(1)
-                    self.cycle_buzz = True
                     self.globals["BUZZER_TIME"] = time.time()
                     #set the trig time
                     self.globals["HW_TRIG_TIME"] = time.time()
@@ -652,57 +584,16 @@ class Plot2D(QtWidgets.QMainWindow):
         self.ss2 = mk1
 
 
-    def update_real_time(self):
-        self.x=np.concatenate((self.x[1:], [self.x[-1]+0.01]), axis=None)
-        self.y=np.concatenate((self.y[1:], [randint(-10,10)]), axis=None)
-
-        self.d.setData(self.x, self.y)
-
-    def setTitle(self, str):
-        self.plot.setTitle(str)
-
-    def setXAxis(self, str, style):
-        #styles = {'font-size': '20px'}
-        self.plot.setLabel('bottom', str)
-
-    def setYAxis(self, str, style={}, loc='left'):
-        self.plot.setLabel(loc, str)
-
-    def grid(self, x=True, y=True):
-        self.plot.showGrid(x,y)
-
-    def yLimits(self, lims, e=0):
-        self.plot.setYRange(lims[0], lims[1], padding=e)
-
-    def limits(self, lims):
-        try:
-            if(isinstance(lims, list) == False):
-                raise("TypeError: input should be list")
-            else:
-                lims = [lims[0], lims[1], 0, lims[2]] if(len(lims) == 3) else lims
-                lims = [lims[0], lims[1], lims[0], lims[1]] if len(lims) == 2 else lims
-                lims = [lims[0], lims[0], lims[0], lims[0]] if len(lims) == 1 else lims
-                self.plot.setXRange(lims[0], lims[1], padding=0)
-                self.plot.setYRange(lims[2], lims[3], padding=0)
-        except Exception as e:
-            print(e)
-
-    def clearPlot(self):
-        self.plot.clear()
-
-
-    def start(self):
-        if((sys.flags.interactive != 1) or not hasattr(QtCore, "PYQT_VERSION")):
-            QtGui.QGuiApplication.instance().exec_()
-
-    def runADC(self):
-        pass
-
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)
-    main = Plot2D()
-    sys.exit(app.exec_())
+    sys_main_3()
+    
 
 if __name__ == "__main__":
     main()
+    
+        
+
+
+
+
