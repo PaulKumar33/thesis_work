@@ -332,9 +332,9 @@ class Plot2D(QtWidgets.QMainWindow):
         
         p1 = e1/total
         p2 = e2/total
-        if(np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"]):
-            print(self.flags["BUZZ"], np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"], time.time() - self.globals["BUZZER_TIME"])
-    
+        '''if(np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"]):
+            print(self.cycle_buzz == False , np.abs(time.time()-self.globals["HW_TRIG_TIME"])<=self.globals["HW_TIMER_THRESH"], time.time() - self.globals["BUZZER_TIME"])
+        '''
         if(self.flags["DATA"] == False and np.abs(time.time() - self.globals["SUCCESS_TRIG"])>=self.globals["SUCCESS_TIMER_THRESH"]):
             #start collecting again
             print(">>> Running collection")
