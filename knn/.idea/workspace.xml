@@ -2,10 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d4e72149-b43b-40b7-bd88-3bcb3438602a" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../decision_data_new.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/../decision_data_new.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../decision_data_new-DESKTOP-57H4S3H.xlsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/../decision_tree/impurity.py" beforeDir="false" afterPath="$PROJECT_DIR$/../decision_tree/impurity.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../hw_tracking-DESKTOP-57H4S3H.csv" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/knn_learn.py" beforeDir="false" afterPath="$PROJECT_DIR$/knn_learn.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -33,7 +33,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.knn_learn">
+  <component name="RunManager" selected="Python.impurity">
     <configuration name="excelDataParse" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="knn" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -76,6 +76,27 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="impurity" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="knn" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../decision_tree" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../decision_tree/impurity.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="knn_learn" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="knn" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -99,6 +120,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.impurity" />
         <item itemvalue="Python.knn_learn" />
         <item itemvalue="Python.findPeaks" />
         <item itemvalue="Python.excelDataParse" />
@@ -151,9 +173,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="922" y="162" key="SettingsEditor/0.0.1920.1040/-1024.0.1024.728@0.0.1920.1040" timestamp="1618803204063" />
-    <state x="1136" y="343" key="com.intellij.ide.util.TipDialog" timestamp="1618803190043">
+    <state x="1136" y="343" key="com.intellij.ide.util.TipDialog" timestamp="1624497976009">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="1136" y="343" key="com.intellij.ide.util.TipDialog/0.0.1920.1040/-1024.0.1024.728@0.0.1920.1040" timestamp="1618803190043" />
+    <state x="1136" y="343" key="com.intellij.ide.util.TipDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1624497976009" />
   </component>
 </project>
