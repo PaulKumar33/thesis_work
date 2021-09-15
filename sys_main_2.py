@@ -96,7 +96,7 @@ class Plot2D(QtWidgets.QMainWindow):
         # loop unravel
 
         self.clear_features()
-        self.writeToCSV()
+        self.writeToCSV(0, "entering", 1, 1, 0)
 
     def __init__(self, *args, **kwargs):
         super(Plot2D, self).__init__(*args, **kwargs)
@@ -267,7 +267,7 @@ class Plot2D(QtWidgets.QMainWindow):
 
     def update_adc_measurement(self):
         if (int(datetime.datetime.now().strftime("%M")) % 50 == 0 and self.collect):
-            self.writeToCSV()
+            #self.writeToCSV()
             self.collect = False
         elif (int(datetime.datetime.now().strftime("%M")) % 50 != 0):
             self.collect = True
@@ -334,15 +334,13 @@ class Plot2D(QtWidgets.QMainWindow):
             # start collecting again
             print(">>> Running collection")
             self.flags["DATA"] = True
-        if (self.cycle_buzz == False and np.abs(time.time() - self.globals["HW_TRIG_TIME"]) <= self.globals[
-            "HW_TIMER_THRESH"] and time.time() - self.globals["BUZZER_TIME"] >= 20):
+        if (self.cycle_buzz == False and self.flags["TRIG"] ==True and time.time() - self.globals["BUZZER_TIME"] >= 20):
             self.globals["BUZZER_TIME"] = time.time()
             self.cycle_buzz = True
             print("BUZZ")
             self.buzzer_indicator(1)
 
-        elif (self.cycle_buzz == True and np.abs(time.time() - self.globals["HW_TRIG_TIME"]) <= self.globals[
-            "HW_TIMER_THRESH"] and time.time() - self.globals["BUZZER_TIME"] >= 3):
+        elif (self.cycle_buzz == True and self.flags["TRIG"] == True and time.time() - self.globals["BUZZER_TIME"] >= 3):
             self.buzzer_indicator(0)
             self.cycle_buzz = False
 
