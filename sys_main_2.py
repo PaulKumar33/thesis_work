@@ -476,13 +476,13 @@ class Plot2D(QtWidgets.QMainWindow):
         p2 = self.update_array_movag(p2, self.p2[-1 - self.N + 1: -1], self.N)
         self.p2 = np.concatenate((self.p2, [p2]), axis=None)
 
-        self.tt = np.concatenate((self.tt, [self.t[-1]]), axis=None)
-        self.ty1 = np.concatenate((self.ty1, [self.y1[-1]]), axis=None)
-        self.ty2 = np.concatenate((self.ty2, [self.y2[-1]]), axis=None)
-        self.te1 = np.concatenate((self.te1, [self.e1[-1]]), axis=None)
-        self.te2 = np.concatenate((self.te2, [self.e2[-1]]), axis=None)
-        self.tp1 = np.concatenate((self.tp1, [self.p1[-1]]), axis=None)
-        self.tp2 = np.concatenate((self.tp2, [self.p2[-1]]), axis=None)
+        #self.tt = np.concatenate((self.tt, [self.t[-1]]), axis=None)
+        #self.ty1 = np.concatenate((self.ty1, [self.y1[-1]]), axis=None)
+        #self.ty2 = np.concatenate((self.ty2, [self.y2[-1]]), axis=None)
+        #self.te1 = np.concatenate((self.te1, [self.e1[-1]]), axis=None)
+        #self.te2 = np.concatenate((self.te2, [self.e2[-1]]), axis=None)
+        #self.tp1 = np.concatenate((self.tp1, [self.p1[-1]]), axis=None)
+        #self.tp2 = np.concatenate((self.tp2, [self.p2[-1]]), axis=None)
         # movavg filter
 
         self.cnt += 1
