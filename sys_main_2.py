@@ -16,7 +16,6 @@ import datetime
 import mcp_3008_driver as mcp
 import RPi.GPIO as GPIO
 
-
 class Plot2D(QtWidgets.QMainWindow):
     def setup_gpios(self):
         GPIO.setmode(GPIO.BCM)
@@ -136,7 +135,8 @@ class Plot2D(QtWidgets.QMainWindow):
         }
         print(">>> Starting up")
         print(">>> Flags: ")
-
+        self.cues = False
+        self.start_time = datetime.datetime.now().strftime("%d-%m-%Y-%M")
         for key in self.flags.keys():
             print("{0}: {1}".format(key, self.flags[key]))
             time.sleep(0.1)
@@ -266,6 +266,8 @@ class Plot2D(QtWidgets.QMainWindow):
             self.update_adc_measurement()'''
 
     def update_adc_measurement(self):
+        if(self.cues == False and int(datetime.datetime.now().strftime("%M"))>= 55):
+            self.cues = True
         if (int(datetime.datetime.now().strftime("%M")) % 50 == 0 and self.collect):
             #self.writeToCSV()
             self.collect = False
@@ -338,7 +340,8 @@ class Plot2D(QtWidgets.QMainWindow):
             self.globals["BUZZER_TIME"] = time.time()
             self.cycle_buzz = True
             print("BUZZ")
-            self.buzzer_indicator(1)
+            if(self.cues):
+                self.buzzer_indicator(1)
 
         elif (self.cycle_buzz == True and self.flags["TRIG"] == True and time.time() - self.globals["BUZZER_TIME"] >= 3):
             self.buzzer_indicator(0)
@@ -351,8 +354,9 @@ class Plot2D(QtWidgets.QMainWindow):
             self.flash_cnt = 0
 
         if (e1 >= 3.75 or e2 >= 3.75):
-
-            self.LED_indicator(1)
+            
+            if(self.cues):
+                self.LED_indicator(1)
             # get the first sensor high
             self.trigger_cnt += 1
             if (self.first_trigger == None and p1 >= p2):
@@ -367,11 +371,13 @@ class Plot2D(QtWidgets.QMainWindow):
 
             if (e1 >= 0.9 and e2 >= 0.9):
                 if (self.first_trigger == 0 and self.flags["DIRECTION"] == 1 and self.flags["BUZZ"] == False):
-                    self.buzzer_indicator(1)
+                    if(self.cues):
+                        self.buzzer_indicator(1)
                     self.globals["BUZZER_TIME"] = time.time()
                     self.flags["BUZZ"] = True
                 elif (self.first_trigger == 1 and self.flags["DIRECTION"] == 0 and self.flags["BUZZ"] == False):
-                    self.buzzer_indicator(1)
+                    if(self.cues):
+                        self.buzzer_indicator(1)
                     self.globals["BUZZER_TIME"] = time.time()
                     self.flags["BUZZ"] = True
 
@@ -399,7 +405,8 @@ class Plot2D(QtWidgets.QMainWindow):
             if (np.abs(self.y2[-1] - self.ss2) >= 0.3):
                 self.update_s2_peak()
         elif (e1 <= 0.15 and e2 <= 0.15 and self.schmit_trig == 1):
-            self.LED_indicator(1)
+            if(self.cues):
+                self.LED_indicator(1)
             self.schmit_trig = 0
             ttrigger = self.trigger[1:] if len(self.trigger[1:]) <= 128 else self.trigger[1:128]
             self.trigger = np.concatenate((ttrigger, [0]), axis=None)
@@ -579,7 +586,8 @@ class Plot2D(QtWidgets.QMainWindow):
                 if (np.abs(time.time() - self.globals["TRIG_TIME"]) >= self.globals["TRIG_THRESH"]
                         and np.abs(time.time() - self.globals["HW_TRIG_TIME"]) >= self.globals["HW_TIMER_THRESH"]):
                     print("Event Captured")
-                    self.buzzer_indicator(1)
+                    if(self.cues):
+                        self.buzzer_indicator(1)
                     self.cycle_buzz = True
                     self.globals["BUZZER_TIME"] = time.time()
                     # set the trig time
