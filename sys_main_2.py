@@ -105,7 +105,7 @@ class Plot2D(QtWidgets.QMainWindow):
         '''
         self.flags = {
             "HW_TIMER": True,
-            "DIRECTION": 1,
+            "DIRECTION": 0,
             "DATA": True,
             "TRIG": False,
             "BUZZ": False
@@ -266,8 +266,10 @@ class Plot2D(QtWidgets.QMainWindow):
             self.update_adc_measurement()'''
 
     def update_adc_measurement(self):
-        if(self.cues == False and int(datetime.datetime.now().strftime("%M"))>= 55):
+        if(self.cues == False and int(datetime.datetime.now().strftime("%d"))>= 17):
             self.cues = True
+        if(self.cues == True and int(datetime.datetime.now().strftime("%d"))>= 24):
+            self.cues = False
         if (int(datetime.datetime.now().strftime("%M")) % 50 == 0 and self.collect):
             #self.writeToCSV()
             self.collect = False
